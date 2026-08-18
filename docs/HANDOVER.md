@@ -200,7 +200,7 @@ number you applied?" before generating yours.
 
 | Phase | Title | Status | Slices Done | Last Patch # | Last Session Date |
 |---|---|---|---|---|---|
-| D1 | Project Foundation & Design System | 🟡 In progress | 8/20 (1a+1b+2+3+4+5+6+7+8 done) | 0012 | 2026-08-18 |
+| D1 | Project Foundation & Design System | 🟡 In progress | 9/20 (1a+1b+2+3+4+5+6+7+8+9 done) | 0013 | 2026-08-18 |
 | D2 | Onboarding & Authentication UI | 🔲 Not started | 0/20 | — | — |
 | D3 | Dashboard & Portfolio | 🔲 Not started | 0/20 | — | — |
 | D4 | Trading Interface | 🔲 Not started | 0/20 | — | — |
@@ -228,9 +228,10 @@ number you applied?" before generating yours.
 
 Legend: 🔲 not started · 🟡 in progress · ✅ complete · 🔒 locked (Category 2, waiting on Category 1)
 
-**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 9 — Glass primitives:
-Button/Dialog** (`GlassButton`, `GlassDialog`, in `core-ui`, built on
-`GlassSurface` from Slice 7).
+**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 10 — ThemeEventBus core**
+(`SharedFlow<ThemeEvent>` + event sealed class, plus `SoundTokens`
+scaffolding per Section 3D — read Section 3D before starting, this
+slice's scope was expanded by that addendum).
 
 ---
 
@@ -410,7 +411,7 @@ one from D1, unchanged unless a genuine bug is found.
 | 6 | Typography + spacing tokens ✅ (0010) | Type scale, spacing scale | — (rarely changes; verify only) |
 | 7 | Glass primitives — Surface/Card ✅ (0011) | `GlassSurface`, `GlassCard` | Perf pass (blur cost on real devices) |
 | 8 | Glass primitives — AppBar/Sheet ✅ (0012) | `GlassAppBar`, `GlassBottomSheet` | Perf pass |
-| 9 | Glass primitives — Button/Dialog (+ Tooltip, see 3D) | `GlassButton`, `GlassDialog`, `GlassTooltip` | Perf pass |
+| 9 | Glass primitives — Button/Dialog (+ Tooltip, see 3D) ✅ (0013) | `GlassButton`, `GlassDialog`, `GlassTooltip` | Perf pass |
 | 10 | ThemeEventBus core (+ SoundTokens/SoundReactor scaffold, see 3D) | `SharedFlow<ThemeEvent>`, event sealed class, `SoundTokens`, `SoundReactor` subscribed | Confirm real screens emit correctly end-to-end; real bundled sound assets |
 | 11 | ThemeReactor — ambient glow | Animate `ambientGlow` color per event | Tune against real event frequency |
 | 12 | ThemeReactor — light source motion | Animate `lightSource.x/y` | Tune |
@@ -1023,6 +1024,27 @@ entries, just add yours with your phase/slice and date.)*
     (Phase D2 onward) or in the Slice-10/11 `ThemeReactor` work, since
     that's when `ambientGlow` starts animating instead of sitting at
     its static idle value.
+- **[D1.S09 — 2026-08-18]** `GlassButton` (Filled + Glass variants),
+  `GlassDialog`, and `GlassTooltip` added to `core-ui`, closing out the
+  Slice 7-9 glass-primitive set per Section 3D's addendum folding
+  `GlassTooltip` into this slice. `GlassDialog` built on
+  `BasicAlertDialog`, `GlassTooltip` on `TooltipBox`/`RichTooltip` —
+  same "reuse Material3's unstyled scaffolding, no new Gradle
+  dependency" approach `GlassBottomSheet` used in Slice 8.
+  One small parity gap flagged rather than silently skipped:
+  **`GlassTooltip` has no border-stroke hairline.** Every other glass
+  primitive gets its cool-white/warm hairline from `GlassSurface`
+  directly; `RichTooltip` doesn't expose a border-color parameter, so
+  this one primitive is fill+text only, no stroke. Low priority (a
+  tooltip's rounded shadow reads fine without it) but noting in case a
+  future perf/polish pass (Slice 20, or R1's perf pass) wants to
+  special-case a border via a custom `Modifier.border` on `content =`
+  instead of `RichTooltip`'s theming API.
+  Slices 10-11 (`ThemeEventBus`/`ThemeReactor` + `SoundTokens`/
+  `SoundReactor` per Section 3D) are still open — Layer 1B's dynamic
+  ambient-glow/light-source animation and Layer 1C's sound cues don't
+  exist yet, so every glass primitive built in Slices 7-9 currently
+  renders its tokens' *static* idle values only.
 
 ---
 
