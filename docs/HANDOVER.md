@@ -773,6 +773,31 @@ entries, just add yours with your phase/slice and date.)*
   Phase D1, Slice 2 per Section 2. Tooling choices (DI framework,
   Ktor vs Spring Boot) are still unmade — flag/decide in the session
   that builds the actual project scaffold.
+- **[CI addition — 2026-08-18, explicit human request, ahead of R1]**
+  Added `.github/workflows/ci.yml`. This is normally R1 scope ("Verify/
+  finalize build config, CI hooks" — see Topic 1's Slice 1b row), but
+  the human explicitly asked for it now, so it's done ahead of
+  schedule rather than deferred. Does **not** count as any D1 slice
+  being complete — slice table/status table are unchanged by this
+  entry. Behavior: runs on every push/PR touching `android/**`,
+  `./gradlew check` only (compile + unit tests + lint, debug variant) —
+  no `assemble`/`bundle`/`assembleRelease`, no artifact upload, since
+  there's no signing config and shouldn't be one yet. Build is stamped
+  `TRADE-0.1.<github.run_number>` via `-PappVersionCode`/
+  `-PappVersionName` (now read from project properties in
+  `android/app/build.gradle.kts`, falls back to `TRADE-0.1.0-dummy`
+  for local/manual builds). Caching: `org.gradle.caching=true` +
+  `org.gradle.parallel=true` in `gradle.properties`, plus
+  `gradle/actions/setup-gradle@v4` persisting the Gradle Home (deps,
+  wrapper, local build cache dir) across CI runs via GitHub's cache
+  backend — unchanged modules come back FROM-CACHE/UP-TO-DATE instead
+  of re-running, so a module that already passed doesn't get re-run
+  (or newly fail) because an unrelated module changed. Real R1 work
+  when that phase arrives: finalize whether this needs a real device/
+  emulator instrumented-test job, decide demo/live build variants
+  (Slice 15) before CI needs to build them, and revisit once signing
+  config exists (must stay untouched by CI until then per the
+  non-negotiable rules).
 - **[D1.S01b — 2026-08-18]** Gradle scaffold added: root
   `settings.gradle.kts`/`build.gradle.kts`, four modules (`app`,
   `core-theme`, `core-ui`, `core-navigation`) each with a minimal

@@ -12,8 +12,11 @@ android {
         applicationId = "com.trade.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0-dummy"
+        // CI stamps these per-build via -PappVersionCode / -PappVersionName
+        // (see .github/workflows/ci.yml). Local/manual builds fall back to
+        // the dummy defaults below.
+        versionCode = (project.findProperty("appVersionCode") as String?)?.toIntOrNull() ?: 1
+        versionName = (project.findProperty("appVersionName") as String?) ?: "TRADE-0.1.0-dummy"
     }
 
     buildFeatures {
