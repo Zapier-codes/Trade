@@ -121,6 +121,16 @@ Reusable primitives, built once, used everywhere:
 - **Light mode glass**: bright frosted-white translucent surface, warm
   hairline border, blur softens background color instead of glowing —
   no neon, more "misted glass" than "sci-fi panel."
+- **`GlassTooltip` (NEW, added post-D1.S04)**: contextual help/info
+  overlay, anchored to the element it explains (info icon tap or
+  long-press). Built on Compose Material3's existing `TooltipBox`/
+  `PlainTooltip`/`RichTooltip` primitives (already available via the
+  `material3` dependency every module already has — no new Gradle
+  dependency needed for this one), reskinned with the same glass
+  surface/border/blur tokens as the rest of this list rather than
+  Material3's default tooltip styling. Dismisses on outside tap or
+  timeout; never blocks interaction with the anchor element itself.
+  Build-order details in `HANDOVER.md` Section 3D (new addendum).
 
 #### 3B.3 — Theming Events (the "reactive" part)
 
@@ -160,6 +170,64 @@ effect, light mode just turns the lights on." Light mode's version
 should favor: shadow depth over glow, hairline color over saturated
 fill, soft ripple over particle bursts. This keeps light mode feeling
 premium and considered rather than like a fallback.
+
+---
+
+### Layer 1C: Dynamic Notification & Action Sound Engine (NEW)
+
+Added post-D1.S04. The audio counterpart to Layer 1B: every action that
+already emits a `ThemeEvent` (Section 3B.3's table — `TradeExecuted`,
+`DepositConfirmed`, `AISignalFired`, `WithdrawalBroadcast`,
+`ErrorOccurred`, `AgentStatusChange`) also gets a distinct short sound,
+so a fill, a deposit landing, and an error don't just *look* different,
+they *sound* different too. This reuses Layer 1B's event bus rather
+than duplicating it — see 1C.2.
+
+#### 1C.1 — Sound Tokens
+
+A `SoundTokens` object maps each `ThemeEvent` type to a short (<1s)
+UI sound cue. Unlike color tokens, sound has no dark/light split — one
+token set. Character guide (final assets are an R-phase concern, D-phase
+uses short placeholder tones/system defaults, see `HANDOVER.md` Section
+3D):
+
+| Event | Sound character |
+| :--- | :--- |
+| `TradeExecuted(buy)` | Short rising two-note chime |
+| `TradeExecuted(sell)` | Short falling two-note chime |
+| `DepositConfirmed` | Warm ascending arpeggio (pairs with the "gold sweep" visual) |
+| `AISignalFired(confidence)` | Soft synth blip, pitch/brightness scales with confidence |
+| `WithdrawalBroadcast` | Low soft "sent" whoosh |
+| `ErrorOccurred` | Single muted low tone, deliberately not alarming |
+| `AgentStatusChange` | Very quiet ambient tick, easy to miss on purpose (agents change status often) |
+
+Every future `ThemeEvent` added by a later phase must get a `SoundTokens`
+entry in the same patch that adds the event — same non-negotiable rule
+Section 3B.3 already sets for the visual side.
+
+#### 1C.2 — SoundReactor
+
+A `SoundReactor` (non-Composable singleton, mounted once at app root
+alongside `ThemeReactor`) subscribes to the **same** `ThemeEventBus`
+`SharedFlow<ThemeEvent>` Layer 1B already defines — no second event bus.
+On each event it looks up the matching `SoundTokens` entry and plays it
+via `android.media.SoundPool` + `AudioAttributes` (`USAGE_NOTIFICATION_EVENT`
+/ `CONTENT_TYPE_SONIFICATION`) — the standard low-latency native API for
+short UI sound cues, not a third-party audio library; no new Gradle
+dependency is needed for this layer. `SoundReactor` respects, in order:
+device silent/DND mode (never overridden), then the in-app "sound on/off"
+toggle added to the Notification Settings screen (Topic 8, D8.S03 — see
+`HANDOVER.md` Section 3D for exact slice mapping).
+
+#### 1C.3 — Relationship to Push Notification Sounds (Topic 8)
+
+Android `NotificationChannel` sounds (used for actual push notifications,
+Topic 8) are a **separate** mechanism from in-app `SoundReactor` cues —
+channels play their sound when the app isn't foregrounded, `SoundReactor`
+plays when it is. Both should use the *same* `SoundTokens` character
+per event type so the experience is consistent whether the app is open
+or not, but the plumbing (channel sound URI vs. `SoundPool` playback) is
+implemented separately per Topic 8's own D8/R8 slices.
 
 ---
 

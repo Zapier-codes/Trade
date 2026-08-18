@@ -319,7 +319,56 @@ Section 6 instead of building it.
 
 ---
 
+## 3D. ADDENDUM — Tooltip System & Dynamic Sound Engine (added post-D1.S04)
+
+Full spec for both lives in `docs/TRADE_BLUEPRINT_v2.md` — the new
+`GlassTooltip` entry in Section 3B.2, and the new **Layer 1C: Dynamic
+Notification & Action Sound Engine** section (3B.4a in reading order,
+between Layer 1B and Layer 2) — **read both before touching either
+slice below.** This section only maps that spec onto specific slices,
+same pattern as Section 3C.
+
+**Non-negotiable for every session touching these slices, D or R:**
+`SoundReactor` reuses Layer 1B's existing `ThemeEventBus` — do not
+create a second event bus. Every event that already emits a
+`ThemeEvent` must have a matching `SoundTokens` entry added in the
+same patch, the same rule Section 3B.3 sets for the visual side. Sound
+must never override device silent/DND mode.
+
+- **Topic 1 (Foundation) — Slice 9** (`Glass primitives — Button/Dialog`):
+  scope now also includes `GlassTooltip` (info/help overlay), built on
+  Compose Material3's existing `TooltipBox`/`PlainTooltip`/`RichTooltip`
+  — **no new Gradle dependency needed**, `material3` is already a
+  dependency of every module that needs it. Reskin onto glass tokens
+  from Slices 4-6 the same way the rest of Slice 9's primitives do.
+- **Topic 1 (Foundation) — Slices 10-11** (`ThemeEventBus core` /
+  `ThemeReactor — ambient glow`): scope now also includes scaffolding
+  `SoundTokens` (Layer 1C.1) and `SoundReactor` (Layer 1C.2) alongside
+  `ThemeEventBus`/`ThemeReactor` — they're built together because
+  `SoundReactor` subscribes to the same bus `ThemeReactor` does. D-phase:
+  `SoundReactor` wired and subscribed, but its actual playback can use
+  short placeholder tones or system default notification sounds rather
+  than final bundled assets (final asset selection is real creative work,
+  flag as open in Section 6 if reached before R-phase). Playback uses
+  native `android.media.SoundPool` + `AudioAttributes` — **no new Gradle
+  dependency needed** for this either; don't reach for a third-party
+  audio library for short UI cues.
+- **Topic 8 (Notifications) — Slice 3** (`Notification settings screen`):
+  add the in-app "sound on/off" toggle here (Layer 1C.2) alongside the
+  per-category toggles already in scope. This is a new sub-requirement
+  on top of that slice's original scope, same pattern 3C used — do it in
+  the same slice, don't create a new one.
+- **Topic 8 (Notifications) — Slices 4-8** (push notification triggers):
+  when wiring each `NotificationChannel`'s sound (D-phase: fake local
+  notification demo; R-phase: real FCM trigger), use the matching
+  `SoundTokens` character from Layer 1C.1 so the in-app and
+  out-of-app sound for the same event type feel consistent (Layer
+  1C.3) — implemented separately from `SoundReactor`, per event.
+
+---
+
 ## 4. PHASE DETAILS
+
 
 Each phase-topic below has: **Goal**, **Scope**, **Phase acceptance
 criteria** (all 20 slices done), and the **20-slice table** (shared
@@ -358,8 +407,8 @@ one from D1, unchanged unless a genuine bug is found.
 | 6 | Typography + spacing tokens | Type scale, spacing scale | — (rarely changes; verify only) |
 | 7 | Glass primitives — Surface/Card | `GlassSurface`, `GlassCard` | Perf pass (blur cost on real devices) |
 | 8 | Glass primitives — AppBar/Sheet | `GlassAppBar`, `GlassBottomSheet` | Perf pass |
-| 9 | Glass primitives — Button/Dialog | `GlassButton`, `GlassDialog` | Perf pass |
-| 10 | ThemeEventBus core | `SharedFlow<ThemeEvent>`, event sealed class | Confirm real screens emit correctly end-to-end |
+| 9 | Glass primitives — Button/Dialog (+ Tooltip, see 3D) | `GlassButton`, `GlassDialog`, `GlassTooltip` | Perf pass |
+| 10 | ThemeEventBus core (+ SoundTokens/SoundReactor scaffold, see 3D) | `SharedFlow<ThemeEvent>`, event sealed class, `SoundTokens`, `SoundReactor` subscribed | Confirm real screens emit correctly end-to-end; real bundled sound assets |
 | 11 | ThemeReactor — ambient glow | Animate `ambientGlow` color per event | Tune against real event frequency |
 | 12 | ThemeReactor — light source motion | Animate `lightSource.x/y` | Tune |
 | 13 | ThemeReactor — contextual caption | `ContextualCaption` slot + fade timing | Real copywriting pass per event |
@@ -634,7 +683,7 @@ email for security alerts.
 |---|---|---|---|
 | 1 | In-app notification feed — list UI | Fake notification list | Real Novu feed API |
 | 2 | Notification detail / tap-through | Fake detail sheet + fake deep link | Real deep link to relevant screen |
-| 3 | Notification settings screen | Fake per-category toggles | Real preference persistence via Novu |
+| 3 | Notification settings screen (+ in-app sound toggle, see 3D) | Fake per-category toggles + sound on/off toggle | Real preference persistence via Novu |
 | 4 | Push notification — trade execution | Fake local notification demo | Real FCM trigger from backend |
 | 5 | Push notification — AI signal | Fake local notification demo | Real FCM trigger |
 | 6 | Push notification — deposit/withdrawal | Fake local notification demo | Real FCM trigger |
@@ -746,6 +795,7 @@ services, performance pass, crash-resilience pass, final retrospective
 
 - Blueprint (product spec): `docs/TRADE_BLUEPRINT_v2.md`
 - Theming engine spec: Blueprint Section 3B (Layer 1B)
+- Tooltip + dynamic sound engine spec: Blueprint Section 3B.2 (`GlassTooltip`) + new Layer 1C, mapped in this file's Section 3D
 - 10 phase-topics: Blueprint Section 9
 - Session workflow: Section 1 of this file
 - Status/next-slice: Section 2 of this file
@@ -909,6 +959,27 @@ entries, just add yours with your phase/slice and date.)*
     just don't let it silently slip past both.
   - Not independently buildable in this sandbox (no Gradle wrapper),
     reviewed by hand only, same caveat as prior slices.
+- **[Doc addendum, explicit human request, ahead of Slice 5 — 2026-08-18]**
+  Added Section 3D (this file) + a new Blueprint "Layer 1C: Dynamic
+  Notification & Action Sound Engine" section + a new `GlassTooltip`
+  entry in Blueprint 3B.2, per explicit human request. **Documentation
+  only — no code in this session, no slice status changed.** Human
+  confirmed: (1) "pro tools" meant "whatever solid production-grade
+  Gradle libraries fit," not a named library — resolved to: no new
+  Gradle dependency needed for either feature (`GlassTooltip` builds on
+  Material3's existing `TooltipBox`/`PlainTooltip`/`RichTooltip`;
+  `SoundReactor` uses native `android.media.SoundPool`, not a
+  third-party audio lib) — flag in a future session if that changes;
+  (2) sound engine should mirror `ThemeEventBus`/`ThemeReactor`
+  architecturally, confirmed: `SoundReactor` subscribes to the *same*
+  bus, no second event system. Slice-table changes: Topic 1 Slice 9 now
+  includes `GlassTooltip`, Topic 1 Slices 10-11 now include
+  `SoundTokens`/`SoundReactor` scaffolding, Topic 8 Slice 3 now includes
+  an in-app sound on/off toggle. None of these slices are built yet
+  (Slice 5 is still next) — this only changes what those *future*
+  sessions' scope includes when they're reached. See Section 3D for the
+  full mapping and non-negotiable rules (reuse the one event bus; every
+  new `ThemeEvent` needs a matching `SoundTokens` entry going forward).
 
 ---
 
