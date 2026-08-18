@@ -200,7 +200,7 @@ number you applied?" before generating yours.
 
 | Phase | Title | Status | Slices Done | Last Patch # | Last Session Date |
 |---|---|---|---|---|---|
-| D1 | Project Foundation & Design System | 🟡 In progress | 7/20 (1a+1b+2+3+4+5+6+7 done) | 0011 | 2026-08-18 |
+| D1 | Project Foundation & Design System | 🟡 In progress | 8/20 (1a+1b+2+3+4+5+6+7+8 done) | 0012 | 2026-08-18 |
 | D2 | Onboarding & Authentication UI | 🔲 Not started | 0/20 | — | — |
 | D3 | Dashboard & Portfolio | 🔲 Not started | 0/20 | — | — |
 | D4 | Trading Interface | 🔲 Not started | 0/20 | — | — |
@@ -228,9 +228,9 @@ number you applied?" before generating yours.
 
 Legend: 🔲 not started · 🟡 in progress · ✅ complete · 🔒 locked (Category 2, waiting on Category 1)
 
-**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 8 — Glass primitives:
-AppBar/Sheet** (`GlassAppBar`, `GlassBottomSheet`, in `core-ui`,
-built on `GlassSurface` from Slice 7).
+**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 9 — Glass primitives:
+Button/Dialog** (`GlassButton`, `GlassDialog`, in `core-ui`, built on
+`GlassSurface` from Slice 7).
 
 ---
 
@@ -409,7 +409,7 @@ one from D1, unchanged unless a genuine bug is found.
 | 5 | Color tokens (light) ✅ (0009) | `TradeThemeLight` full token set | Contrast/accessibility audit against real content |
 | 6 | Typography + spacing tokens ✅ (0010) | Type scale, spacing scale | — (rarely changes; verify only) |
 | 7 | Glass primitives — Surface/Card ✅ (0011) | `GlassSurface`, `GlassCard` | Perf pass (blur cost on real devices) |
-| 8 | Glass primitives — AppBar/Sheet | `GlassAppBar`, `GlassBottomSheet` | Perf pass |
+| 8 | Glass primitives — AppBar/Sheet ✅ (0012) | `GlassAppBar`, `GlassBottomSheet` | Perf pass |
 | 9 | Glass primitives — Button/Dialog (+ Tooltip, see 3D) | `GlassButton`, `GlassDialog`, `GlassTooltip` | Perf pass |
 | 10 | ThemeEventBus core (+ SoundTokens/SoundReactor scaffold, see 3D) | `SharedFlow<ThemeEvent>`, event sealed class, `SoundTokens`, `SoundReactor` subscribed | Confirm real screens emit correctly end-to-end; real bundled sound assets |
 | 11 | ThemeReactor — ambient glow | Animate `ambientGlow` color per event | Tune against real event frequency |
