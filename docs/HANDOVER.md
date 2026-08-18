@@ -112,8 +112,12 @@ human builds and runs on their own machine/device.
    plainly: which phase/slice this was, what changed (short bullets),
    and the exact apply command:
    ```
-   git am ~/Downloads/0007-D1.S03-glass-token-primitives.patch && git push
+   git am ~/storage/downloads/0007-D1.S03-glass-token-primitives.patch && git push
    ```
+   (Path is `~/storage/downloads/` for the Termux workflow this project
+   uses — not `~/Downloads/` — confirmed 2026-08-18. Requires Termux's
+   `termux-setup-storage` to have been run once so `~/storage/downloads`
+   is linked to the device's real Downloads folder.)
 8. **Update `docs/HANDOVER.md` itself**, in the same commit:
    - Mark your slice ✅ in that phase's slice table (date + patch #).
    - If that was the 20th slice of the phase, mark the phase itself
@@ -980,6 +984,15 @@ entries, just add yours with your phase/slice and date.)*
   sessions' scope includes when they're reached. See Section 3D for the
   full mapping and non-negotiable rules (reuse the one event bus; every
   new `ThemeEvent` needs a matching `SoundTokens` entry going forward).
+- **[Doc correction — 2026-08-18]** Section 1's `git am` apply-command
+  example used `~/Downloads/<patch>` — wrong for this project's actual
+  device workflow, which is Termux, where the real Downloads folder is
+  linked at `~/storage/downloads/` (after `termux-setup-storage` has
+  been run once). Corrected in Section 1 step 7. **Every prior
+  session's handoff message that told the human to run
+  `git am ~/Downloads/...` should be read as `git am
+  ~/storage/downloads/...` instead** — the patch files themselves are
+  unaffected, only the path in the apply command was wrong.
 
 ---
 
