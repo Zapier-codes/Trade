@@ -1,0 +1,7 @@
+<resources>
+    <!-- Placeholder platform theme. Real dark/light token sets are Compose-side
+         (core-theme module, Slices 4-5) — this XML theme only exists to satisfy
+         the manifest and sets a plain Material3 DayNight base until the app
+         icon / splash placeholder work in Slice 16. -->
+    <style name="Theme.Trade" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>

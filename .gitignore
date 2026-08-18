@@ -1,0 +1,20 @@
+# Gradle / Android
+android/.gradle/
+android/**/build/
+android/local.properties
+android/.idea/
+android/*.iml
+android/**/*.iml
+android/captures/
+android/.cxx/
+
+# Never commit secrets, keystores, or signing config (see HANDOVER.md
+# "Non-negotiable rules for every session").
+*.jks
+*.keystore
+**/secrets.properties
+.env
+.env.*
+
+# OS
+.DS_Store

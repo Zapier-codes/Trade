@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Boot receiver only needs this permission for real (R-phase) sharing;
+         declared now so the manifest shape doesn't change later, but the
+         receiver itself is a no-op stub until Pawns SDK is wired in R1/R-phase. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <application
+        android:name=".TradeApplication"
+        android:allowBackup="false"
+        android:label="TRADE"
+        android:theme="@style/Theme.Trade">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Trade">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Pawns bandwidth-sharing boot receiver (Blueprint 10.5).
+             D-phase: stub only, does not start any real sharing service.
+             R-phase: must check recorded consent before resuming sharing. -->
+        <receiver
+            android:name=".pawns.PawnsBootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>

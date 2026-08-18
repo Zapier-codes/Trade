@@ -196,7 +196,7 @@ number you applied?" before generating yours.
 
 | Phase | Title | Status | Slices Done | Last Patch # | Last Session Date |
 |---|---|---|---|---|---|
-| D1 | Project Foundation & Design System | 🟡 In progress | 1/20 | 0001 | 2026-08-18 |
+| D1 | Project Foundation & Design System | 🟡 In progress | 1b/20 (1a+1b done) | 0002 | 2026-08-18 |
 | D2 | Onboarding & Authentication UI | 🔲 Not started | 0/20 | — | — |
 | D3 | Dashboard & Portfolio | 🔲 Not started | 0/20 | — | — |
 | D4 | Trading Interface | 🔲 Not started | 0/20 | — | — |
@@ -224,9 +224,9 @@ number you applied?" before generating yours.
 
 Legend: 🔲 not started · 🟡 in progress · ✅ complete · 🔒 locked (Category 2, waiting on Category 1)
 
-**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 2** (see D1's 20-slice
-table in Section 4 for the slice name — take the next unclaimed 🔲
-slice in order).
+**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 2 — Clean Architecture
+skeleton** (`domain`/`data`/`presentation` folder contracts, placeholder
+use-cases; DI framework choice — Hilt vs Koin — needs a decision here).
 
 ---
 
@@ -348,7 +348,8 @@ one from D1, unchanged unless a genuine bug is found.
 
 | # | Slice | D-phase focus | R-phase focus |
 |---|---|---|---|
-| 1 | Repo + Gradle scaffold | Create repo (Section 0), module structure, empty app | Verify/finalize build config, CI hooks |
+| 1a | Repo creation (Section 0) | Create repo, push initial `docs/HANDOVER.md` + `docs/TRADE_BLUEPRINT_v2.md` — **done, patch #0001** | — (one-time) |
+| 1b | Gradle scaffold + module structure + Pawns/Consent scaffold | Module skeleton (`app`, `core-theme`, `core-ui`, `core-navigation`), empty app that plausibly compiles, `PawnsManager`/`ConsentModal`/boot-receiver stubs per Section 3C addendum (SDK calls stubbed, no real `.aar`/API key) | Verify/finalize build config, CI hooks; wire real Pawns SDK + API key + boot-receiver consent check |
 | 2 | Clean Architecture skeleton | `domain`/`data`/`presentation` folder contracts, placeholder use-cases | Real DI wiring (Hilt/Koin) across layers |
 | 3 | Navigation graph | All planned routes as empty Composables | Deep-link handling, real auth-gated routes |
 | 4 | Color tokens (dark) | `TradeThemeDark` full token set | Contrast/accessibility audit against real content |
@@ -772,6 +773,23 @@ entries, just add yours with your phase/slice and date.)*
   Phase D1, Slice 2 per Section 2. Tooling choices (DI framework,
   Ktor vs Spring Boot) are still unmade — flag/decide in the session
   that builds the actual project scaffold.
+- **[D1.S01b — 2026-08-18]** Gradle scaffold added: root
+  `settings.gradle.kts`/`build.gradle.kts`, four modules (`app`,
+  `core-theme`, `core-ui`, `core-navigation`) each with a minimal
+  `build.gradle.kts` and a placeholder Kotlin file noting which future
+  slice owns their real content. `app` has `TradeApplication`,
+  `MainActivity` (renders one unstyled placeholder screen — no
+  navigation graph yet, that's Slice 3), and the Pawns/Consent scaffold
+  from the Section 3C addendum: `PawnsManager` (fake in-memory consent,
+  no real SDK/API key), `ConsentModal` (4 tabs: General/Privacy/Data
+  Protection/Data Sharing, plain Material3 — reskin onto Glass
+  primitives after Slices 7-9 exist, not before), and
+  `PawnsBootReceiver` (manifest-registered, no-op until R-phase).
+  **Gap:** no Gradle wrapper — this sandbox has no network access to
+  generate one; see `android/gradle/README.md`. Human needs to run
+  `gradle wrapper --gradle-version 8.9` locally and commit the result
+  before this will actually build. DI framework choice (Hilt vs Koin)
+  still open — deferred to Slice 2 as planned.
 - **[Doc creation]** Session partitioning (Section 1) intentionally
   does *not* pre-assign exact files per slice the way a normal
   single-repo phase doc would, because the repo doesn't exist yet.
@@ -783,4 +801,4 @@ entries, just add yours with your phase/slice and date.)*
 ---
 
 *End of HANDOVER.md. Next session: Category 1, Phase D1, Slice 2 —
-see Section 2/4 for the slice table.*
+Clean Architecture skeleton.*
