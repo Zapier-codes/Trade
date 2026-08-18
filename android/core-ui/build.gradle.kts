@@ -30,5 +30,6 @@ dependencies {
     implementation(project(":core-theme"))
     implementation(platform("androidx.compose:compose-bom:2024.09.02"))
     implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material3:material3")
 }

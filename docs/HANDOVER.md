@@ -200,7 +200,7 @@ number you applied?" before generating yours.
 
 | Phase | Title | Status | Slices Done | Last Patch # | Last Session Date |
 |---|---|---|---|---|---|
-| D1 | Project Foundation & Design System | 🟡 In progress | 6/20 (1a+1b+2+3+4+5+6 done) | 0010 | 2026-08-18 |
+| D1 | Project Foundation & Design System | 🟡 In progress | 7/20 (1a+1b+2+3+4+5+6+7 done) | 0011 | 2026-08-18 |
 | D2 | Onboarding & Authentication UI | 🔲 Not started | 0/20 | — | — |
 | D3 | Dashboard & Portfolio | 🔲 Not started | 0/20 | — | — |
 | D4 | Trading Interface | 🔲 Not started | 0/20 | — | — |
@@ -228,9 +228,9 @@ number you applied?" before generating yours.
 
 Legend: 🔲 not started · 🟡 in progress · ✅ complete · 🔒 locked (Category 2, waiting on Category 1)
 
-**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 7 — Glass primitives:
-Surface/Card** (`GlassSurface`, `GlassCard`, in `core-ui`, consuming
-the color/typography/spacing tokens from Slices 4-6).
+**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 8 — Glass primitives:
+AppBar/Sheet** (`GlassAppBar`, `GlassBottomSheet`, in `core-ui`,
+built on `GlassSurface` from Slice 7).
 
 ---
 
@@ -408,7 +408,7 @@ one from D1, unchanged unless a genuine bug is found.
 | 4 ✅ | Color tokens (dark) | `TradeThemeDark` full token set — **done, patch #0006** | Contrast/accessibility audit against real content |
 | 5 | Color tokens (light) ✅ (0009) | `TradeThemeLight` full token set | Contrast/accessibility audit against real content |
 | 6 | Typography + spacing tokens ✅ (0010) | Type scale, spacing scale | — (rarely changes; verify only) |
-| 7 | Glass primitives — Surface/Card | `GlassSurface`, `GlassCard` | Perf pass (blur cost on real devices) |
+| 7 | Glass primitives — Surface/Card ✅ (0011) | `GlassSurface`, `GlassCard` | Perf pass (blur cost on real devices) |
 | 8 | Glass primitives — AppBar/Sheet | `GlassAppBar`, `GlassBottomSheet` | Perf pass |
 | 9 | Glass primitives — Button/Dialog (+ Tooltip, see 3D) | `GlassButton`, `GlassDialog`, `GlassTooltip` | Perf pass |
 | 10 | ThemeEventBus core (+ SoundTokens/SoundReactor scaffold, see 3D) | `SharedFlow<ThemeEvent>`, event sealed class, `SoundTokens`, `SoundReactor` subscribed | Confirm real screens emit correctly end-to-end; real bundled sound assets |
@@ -992,6 +992,37 @@ entries, just add yours with your phase/slice and date.)*
   `git am ~/Downloads/...` should be read as `git am
   ~/storage/downloads/...` instead** — the patch files themselves are
   unaffected, only the path in the apply command was wrong.
+- **[D1.S07 — 2026-08-18]** `GlassSurface`/`GlassCard` added to
+  `core-ui`. Two things built beyond this slice's literal name because
+  they were blocking dependencies, not scope creep — flagging per
+  Section 1's rule:
+  1. `LocalTradeTheme`/`TradeTheme { }` (in `core-theme`) — `TradeColorTokens`'
+     Slice-4 doc had explicitly deferred this until both token sets
+     existed (done as of Slice 5); glass primitives can't read tokens
+     without it, so it shipped here rather than being invented ad hoc
+     inside `GlassSurface`.
+  2. `androidx.compose.foundation:foundation` added as a dependency to
+     both `core-theme` (for `isSystemInDarkTheme`) and `core-ui` (for
+     `Box`/`background`/`border`) — neither module had it yet.
+
+  Two gaps intentionally **not** filled, left for a later slice:
+  - **No `radius.*` token group exists yet** (Blueprint 3B.1 lists it
+    but no D1 slice names it explicitly). `GlassSurface`/`GlassCard`
+    take an explicit `Shape` param (default `RectangleShape`) rather
+    than guessing a token home for it. Whoever picks this up should
+    decide whether it lives alongside `TradeColorTokens` as its own
+    group or gets folded into `TradeSpacingTokens`.
+  - **Real background blur (`blurRadius` token) is not applied.**
+    `GlassSurface` approximates dark-mode's "subtle inner glow" with a
+    static `ambientGlow`-colored shadow instead of blurring content
+    behind it — there's no real screen content behind an isolated
+    primitive to blur yet. R1's own note for this slice ("perf pass,
+    blur cost on real devices") implies the real treatment should be
+    tuned against actual screens rather than guessed here. Revisit once
+    a real screen composes `GlassSurface` over real background content
+    (Phase D2 onward) or in the Slice-10/11 `ThemeReactor` work, since
+    that's when `ambientGlow` starts animating instead of sitting at
+    its static idle value.
 
 ---
 
