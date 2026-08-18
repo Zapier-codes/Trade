@@ -200,7 +200,7 @@ number you applied?" before generating yours.
 
 | Phase | Title | Status | Slices Done | Last Patch # | Last Session Date |
 |---|---|---|---|---|---|
-| D1 | Project Foundation & Design System | 🟡 In progress | 4/20 (1a+1b+2+3+4 done) | 0006 | 2026-08-18 |
+| D1 | Project Foundation & Design System | 🟡 In progress | 5/20 (1a+1b+2+3+4+5 done) | 0009 | 2026-08-18 |
 | D2 | Onboarding & Authentication UI | 🔲 Not started | 0/20 | — | — |
 | D3 | Dashboard & Portfolio | 🔲 Not started | 0/20 | — | — |
 | D4 | Trading Interface | 🔲 Not started | 0/20 | — | — |
@@ -228,10 +228,9 @@ number you applied?" before generating yours.
 
 Legend: 🔲 not started · 🟡 in progress · ✅ complete · 🔒 locked (Category 2, waiting on Category 1)
 
-**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 5 — Color tokens (light)**
-(`TradeThemeLight` full token set, in `core-theme` — see Slice 4's note
-on the Dark/Light Parity Rule: this is an independent design pass, not
-a mechanical inversion of `TradeThemeDark`).
+**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 6 — Typography + spacing
+tokens** (type scale, spacing scale, in `core-theme` — rarely changes
+once set, per the phase table).
 
 ---
 
@@ -407,7 +406,7 @@ one from D1, unchanged unless a genuine bug is found.
 | 2 | Clean Architecture skeleton | `domain`/`data`/`presentation` folder contracts, placeholder use-cases | Real DI wiring (Hilt/Koin) across layers |
 | 3 ✅ | Navigation graph | All planned routes as empty Composables — **done, patch #0005** | Deep-link handling, real auth-gated routes |
 | 4 ✅ | Color tokens (dark) | `TradeThemeDark` full token set — **done, patch #0006** | Contrast/accessibility audit against real content |
-| 5 | Color tokens (light) | `TradeThemeLight` full token set | Contrast/accessibility audit against real content |
+| 5 | Color tokens (light) ✅ (0009) | `TradeThemeLight` full token set | Contrast/accessibility audit against real content |
 | 6 | Typography + spacing tokens | Type scale, spacing scale | — (rarely changes; verify only) |
 | 7 | Glass primitives — Surface/Card | `GlassSurface`, `GlassCard` | Perf pass (blur cost on real devices) |
 | 8 | Glass primitives — AppBar/Sheet | `GlassAppBar`, `GlassBottomSheet` | Perf pass |
