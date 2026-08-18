@@ -196,7 +196,7 @@ number you applied?" before generating yours.
 
 | Phase | Title | Status | Slices Done | Last Patch # | Last Session Date |
 |---|---|---|---|---|---|
-| D1 | Project Foundation & Design System | 🟡 In progress | 2/20 (1a+1b+2 done) | 0004 | 2026-08-18 |
+| D1 | Project Foundation & Design System | 🟡 In progress | 3/20 (1a+1b+2+3 done) | 0005 | 2026-08-18 |
 | D2 | Onboarding & Authentication UI | 🔲 Not started | 0/20 | — | — |
 | D3 | Dashboard & Portfolio | 🔲 Not started | 0/20 | — | — |
 | D4 | Trading Interface | 🔲 Not started | 0/20 | — | — |
@@ -224,9 +224,8 @@ number you applied?" before generating yours.
 
 Legend: 🔲 not started · 🟡 in progress · ✅ complete · 🔒 locked (Category 2, waiting on Category 1)
 
-**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 3 — Navigation graph**
-(all planned routes as empty Composables via Compose Navigation, using
-`core-navigation`).
+**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 4 — Color tokens (dark)**
+(`TradeThemeDark` full token set, in `core-theme`).
 
 ---
 
@@ -351,7 +350,7 @@ one from D1, unchanged unless a genuine bug is found.
 | 1a | Repo creation (Section 0) | Create repo, push initial `docs/HANDOVER.md` + `docs/TRADE_BLUEPRINT_v2.md` — **done, patch #0001** | — (one-time) |
 | 1b | Gradle scaffold + module structure + Pawns/Consent scaffold | Module skeleton (`app`, `core-theme`, `core-ui`, `core-navigation`), empty app that plausibly compiles, `PawnsManager`/`ConsentModal`/boot-receiver stubs per Section 3C addendum (SDK calls stubbed, no real `.aar`/API key) | Verify/finalize build config, CI hooks; wire real Pawns SDK + API key + boot-receiver consent check |
 | 2 | Clean Architecture skeleton | `domain`/`data`/`presentation` folder contracts, placeholder use-cases | Real DI wiring (Hilt/Koin) across layers |
-| 3 | Navigation graph | All planned routes as empty Composables | Deep-link handling, real auth-gated routes |
+| 3 ✅ | Navigation graph | All planned routes as empty Composables — **done, patch #0005** | Deep-link handling, real auth-gated routes |
 | 4 | Color tokens (dark) | `TradeThemeDark` full token set | Contrast/accessibility audit against real content |
 | 5 | Color tokens (light) | `TradeThemeLight` full token set | Contrast/accessibility audit against real content |
 | 6 | Typography + spacing tokens | Type scale, spacing scale | — (rarely changes; verify only) |
@@ -840,8 +839,47 @@ entries, just add yours with your phase/slice and date.)*
   handoff notes about exact file paths created, so later sessions in
   D2+ have real paths to reference (the way the reference project's
   Section 3A "re-audit" corrected assumptions after real code existed).
+- **[D1.S03 — 2026-08-18]** Navigation graph added in
+  `core-navigation/src/main/kotlin/com/trade/core/navigation/`:
+  - `TradeRoute.kt` — every planned route (63 destinations) registered
+    as `TradeRoute(path, title, group, slice)` data, one entry per
+    genuinely distinct navigable destination across Topics 2-9's slice
+    tables (fake sub-states of one screen, e.g. deposit success vs.
+    fail, stay in-screen — not separate routes). `TradeRoutes.all` is
+    the single source of truth `TradeNavHost` reads from.
+  - `EmptyRouteScreen.kt` — the one shared placeholder every route
+    resolves to, showing route title/group/owning slice and a "back to
+    directory" button. Deliberately plain Material3 (no `core-theme`
+    tokens/`core-ui` glass primitives — Slices 4-9 don't exist yet).
+  - `RouteDirectoryScreen.kt` — new start destination (`"directory"`),
+    not a product screen: a flat, grouped, tappable list of every
+    route, added specifically so the human can reach any of the 63
+    placeholder screens on a real device for review without deep-link
+    tooling (Section 3's "phone/Termux workflow" concern). Real D2
+    app-entry routing (welcome vs. returning-user auth vs. dashboard)
+    is explicitly *not* decided here — flagging per Section 1 Rule 3
+    ("never re-architect... without saying so") in case D2 expects
+    `TradeNavHost`'s start destination itself, not just its content.
+  - `TradeNavHost.kt` — wires directory + all 63 routes; takes
+    Slice 2's `AppShellViewModel` build-info string as a subtitle
+    parameter so that chain stays live instead of being orphaned by
+    the new host.
+  - `MainActivity.kt` updated: renders `TradeNavHost` instead of
+    Slice 2's single hardcoded screen; `AppShellViewModel` wiring
+    unchanged, its state now feeds the directory subtitle.
+  - `core-navigation/build.gradle.kts`: added `foundation` (LazyColumn/
+    clickable) and `material3` deps, needed for the two new screens.
+  - Removed `core-navigation`'s Slice-1b `Placeholder.kt` stub (real
+    content now present).
+  - **Convention for D2+ (documented at top of `TradeRoute.kt`):** when
+    a feature module ships a route's real screen, point `TradeNavHost`
+    at it and drop that route from ad-hoc placeholder use — don't
+    duplicate route ids elsewhere.
+  - Not independently buildable in this sandbox (no Gradle wrapper
+    yet, per the D1.S01b gap note above) — reviewed by hand for
+    import/package correctness only, same caveat as prior slices.
 
 ---
 
-*End of HANDOVER.md. Next session: Category 1, Phase D1, Slice 3 —
-Navigation graph.*
+*End of HANDOVER.md. Next session: Category 1, Phase D1, Slice 4 —
+Color tokens (dark).*
