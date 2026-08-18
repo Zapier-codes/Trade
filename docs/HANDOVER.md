@@ -200,7 +200,7 @@ number you applied?" before generating yours.
 
 | Phase | Title | Status | Slices Done | Last Patch # | Last Session Date |
 |---|---|---|---|---|---|
-| D1 | Project Foundation & Design System | 🟡 In progress | 5/20 (1a+1b+2+3+4+5 done) | 0009 | 2026-08-18 |
+| D1 | Project Foundation & Design System | 🟡 In progress | 6/20 (1a+1b+2+3+4+5+6 done) | 0010 | 2026-08-18 |
 | D2 | Onboarding & Authentication UI | 🔲 Not started | 0/20 | — | — |
 | D3 | Dashboard & Portfolio | 🔲 Not started | 0/20 | — | — |
 | D4 | Trading Interface | 🔲 Not started | 0/20 | — | — |
@@ -228,9 +228,9 @@ number you applied?" before generating yours.
 
 Legend: 🔲 not started · 🟡 in progress · ✅ complete · 🔒 locked (Category 2, waiting on Category 1)
 
-**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 6 — Typography + spacing
-tokens** (type scale, spacing scale, in `core-theme` — rarely changes
-once set, per the phase table).
+**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 7 — Glass primitives:
+Surface/Card** (`GlassSurface`, `GlassCard`, in `core-ui`, consuming
+the color/typography/spacing tokens from Slices 4-6).
 
 ---
 
@@ -407,7 +407,7 @@ one from D1, unchanged unless a genuine bug is found.
 | 3 ✅ | Navigation graph | All planned routes as empty Composables — **done, patch #0005** | Deep-link handling, real auth-gated routes |
 | 4 ✅ | Color tokens (dark) | `TradeThemeDark` full token set — **done, patch #0006** | Contrast/accessibility audit against real content |
 | 5 | Color tokens (light) ✅ (0009) | `TradeThemeLight` full token set | Contrast/accessibility audit against real content |
-| 6 | Typography + spacing tokens | Type scale, spacing scale | — (rarely changes; verify only) |
+| 6 | Typography + spacing tokens ✅ (0010) | Type scale, spacing scale | — (rarely changes; verify only) |
 | 7 | Glass primitives — Surface/Card | `GlassSurface`, `GlassCard` | Perf pass (blur cost on real devices) |
 | 8 | Glass primitives — AppBar/Sheet | `GlassAppBar`, `GlassBottomSheet` | Perf pass |
 | 9 | Glass primitives — Button/Dialog (+ Tooltip, see 3D) | `GlassButton`, `GlassDialog`, `GlassTooltip` | Perf pass |
