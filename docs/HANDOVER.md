@@ -196,7 +196,7 @@ number you applied?" before generating yours.
 
 | Phase | Title | Status | Slices Done | Last Patch # | Last Session Date |
 |---|---|---|---|---|---|
-| D1 | Project Foundation & Design System | 🟡 In progress | 1b/20 (1a+1b done) | 0002 | 2026-08-18 |
+| D1 | Project Foundation & Design System | 🟡 In progress | 2/20 (1a+1b+2 done) | 0004 | 2026-08-18 |
 | D2 | Onboarding & Authentication UI | 🔲 Not started | 0/20 | — | — |
 | D3 | Dashboard & Portfolio | 🔲 Not started | 0/20 | — | — |
 | D4 | Trading Interface | 🔲 Not started | 0/20 | — | — |
@@ -224,9 +224,9 @@ number you applied?" before generating yours.
 
 Legend: 🔲 not started · 🟡 in progress · ✅ complete · 🔒 locked (Category 2, waiting on Category 1)
 
-**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 2 — Clean Architecture
-skeleton** (`domain`/`data`/`presentation` folder contracts, placeholder
-use-cases; DI framework choice — Hilt vs Koin — needs a decision here).
+**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 3 — Navigation graph**
+(all planned routes as empty Composables via Compose Navigation, using
+`core-navigation`).
 
 ---
 
@@ -773,6 +773,24 @@ entries, just add yours with your phase/slice and date.)*
   Phase D1, Slice 2 per Section 2. Tooling choices (DI framework,
   Ktor vs Spring Boot) are still unmade — flag/decide in the session
   that builds the actual project scaffold.
+- **[D1.S02 — 2026-08-18]** Clean Architecture skeleton added in
+  `app/src/main/kotlin/com/trade/app/{domain,data,presentation}`:
+  base `UseCase`/`NoParamsUseCase` contracts, a placeholder
+  `AppBuildInfoRepository` interface + `GetAppBuildInfoUseCase`,
+  `FakeAppBuildInfoRepository` (D-phase fake, canned response + fake
+  `delay()`), `AppShellUiState` (Loading/Loaded), and
+  `AppShellViewModel` wiring the chain together. `MainActivity` now
+  consumes the ViewModel via `collectAsState()` instead of Slice 1b's
+  hardcoded string. Added `android/ARCHITECTURE.md` documenting this
+  convention for D2+ feature modules to follow.
+  **Correction to the D1.S01b note above:** DI framework choice
+  (Hilt vs Koin) is *not* Slice 2 scope — the Phase acceptance (R1)
+  section is explicit that this is finalized in R1, not D1. Slice 2
+  therefore uses manual wiring only: `AppContainer.kt` (temporary,
+  explicitly labeled, deleted when R1 wires real DI). Future feature
+  modules should give themselves their own equivalent temporary
+  container rather than routing through `AppContainer` — see
+  `android/ARCHITECTURE.md`.
 - **[CI addition — 2026-08-18, explicit human request, ahead of R1]**
   Added `.github/workflows/ci.yml`. This is normally R1 scope ("Verify/
   finalize build config, CI hooks" — see Topic 1's Slice 1b row), but
@@ -825,5 +843,5 @@ entries, just add yours with your phase/slice and date.)*
 
 ---
 
-*End of HANDOVER.md. Next session: Category 1, Phase D1, Slice 2 —
-Clean Architecture skeleton.*
+*End of HANDOVER.md. Next session: Category 1, Phase D1, Slice 3 —
+Navigation graph.*
