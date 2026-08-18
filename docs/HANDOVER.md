@@ -200,7 +200,7 @@ number you applied?" before generating yours.
 
 | Phase | Title | Status | Slices Done | Last Patch # | Last Session Date |
 |---|---|---|---|---|---|
-| D1 | Project Foundation & Design System | 🟡 In progress | 9/20 (1a+1b+2+3+4+5+6+7+8+9 done) | 0014 | 2026-08-18 |
+| D1 | Project Foundation & Design System | 🟡 In progress | 9/20 + S9b (1a+1b+2+3+4+5+6+7+8+9+9b done) | 0015 | 2026-08-18 |
 | D2 | Onboarding & Authentication UI | 🔲 Not started | 0/20 | — | — |
 | D3 | Dashboard & Portfolio | 🔲 Not started | 0/20 | — | — |
 | D4 | Trading Interface | 🔲 Not started | 0/20 | — | — |
@@ -228,11 +228,13 @@ number you applied?" before generating yours.
 
 Legend: 🔲 not started · 🟡 in progress · ✅ complete · 🔒 locked (Category 2, waiting on Category 1)
 
-**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 9b — Widget Style
-scaffold + Settings > Appearance screen** (`WidgetStyle` enum, theme
-plumbing, picker screen, `GlassSurface`+`GlassCard` reskinned for all
-6 styles — read Section 3E before starting; this slice was inserted
-after Slice 9, so Slice 10 comes after this one, not before it).
+**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 10 — `ThemeEventBus` +
+`ThemeReactor`** (Layer 1B's reactive ambient-glow/light-source
+animation, Blueprint 3B.3 — read that section and Section 3D before
+starting; note `SoundTokens`/`SoundReactor` scaffolding per Section 3D
+is also folded into Slices 10-11, don't build a second event bus).
+Slice 9b (Widget Style scaffold + Settings > Appearance screen) is now
+✅ — see Section 6 for what it did and didn't cover.
 
 ---
 
@@ -1112,7 +1114,74 @@ entries, just add yours with your phase/slice and date.)*
   exist yet, so every glass primitive built in Slices 7-9 currently
   renders its tokens' *static* idle values only.
 
+- **[D1.S9b — 2026-08-18]** Widget Style scaffold + Settings >
+  Appearance screen (Blueprint 3B.1 "Widget Style variants",
+  `HANDOVER.md` Section 3E), patch #0015:
+  - `core-theme`: new `WidgetStyle.kt` enum (`Glass, Neumorphic,
+    FlatMaterial, Minimal, Skeuomorphic, RetroNeon`). `TradeThemeInstance`
+    gained a `style: WidgetStyle` field (default `Glass`); `TradeTheme { }`
+    gained a `style` param, threaded through by the caller.
+  - `core-ui`: `GlassSurface` is now the **reference implementation** for
+    all six styles — each gets its own dark+light rendering, derived from
+    the *existing* `TradeColorTokens` fields plus per-style structural
+    treatment (fill/border/shadow shape), **not** twelve new dedicated
+    token files. That's a deliberate scope line, not an oversight — Section
+    3E itself says twelve full token sets "will not fit in one slice."
+    Revisit if a future session/human review wants dedicated per-style
+    token files instead of derived ones. `GlassCard` needed no changes —
+    it inherits every style automatically since it delegates entirely to
+    `GlassSurface`.
+  - **Flagged judgment call**: `WidgetStyle.RetroNeon`'s light-mode
+    expression is in genuine tension with Blueprint 3B.4 ("Dark/Light
+    Parity Rule" — shadow over glow, hairline over saturated fill in
+    light mode). A literal reading would strip the style of its neon
+    glow/saturated stroke entirely, which stops being recognizably
+    "Retro/Neon." Chose to keep the dark base + neon stroke in both
+    modes but dial the glow down (lower elevation/alpha) in light mode,
+    so light mode is still the *quieter* of the pair even though the
+    letter of 3B.4 doesn't map cleanly onto an inherently-glowing style.
+    See `GlassSurface.kt`'s `retroNeonStyle` doc comment. Flag for human
+    review if this reads wrong on-device.
+  - **New route**: `TradeRoutes.appearanceSettings`
+    (`settings/appearance`), the first Topic 1 (Foundation & Design
+    System) entry in `TradeRoute.kt` — everything else in Topic 1 so far
+    is app-shell chrome, not its own destination. `TradeNavHost` now
+    wires this one route to a real screen (`AppearanceSettingsScreen`,
+    `core-ui`) instead of `EmptyRouteScreen`, the first route in the
+    project to get real content — added explicitly above the generic
+    placeholder loop and filtered out of it, per the D2+ convention
+    `TradeRoute.kt` already documented. Future slices shipping a route's
+    real screen should follow the same pattern.
+  - **Blocking dependency built ahead of schedule, flagged per Section 1**:
+    `TradeTheme { }` (built Slice 7) had never actually been mounted
+    anywhere — `MainActivity` still rendered `TradeNavHost` directly, and
+    `GlassSurface`/`GlassCard` were only working because
+    `LocalTradeTheme`'s fallback default happens to be usable. That was
+    fine through Slices 7-9 (nothing needed to *change* the active theme
+    at runtime yet), but this slice's whole point is a picker that visibly
+    reskins the app, which needs a real `CompositionLocalProvider` with
+    mutable state above `TradeNavHost`. `MainActivity`'s
+    `TradeAppShellHost` now mounts `TradeTheme(style = style) { ... }`
+    with `style` hoisted via `remember { mutableStateOf(WidgetStyle.Glass) }`
+    — **in-memory only**, per Section 3E; process death resets to Glass.
+    R-phase replaces this with real DataStore persistence.
+  - `core-navigation` gained `core-theme`/`core-ui` as dependencies (previously
+    had neither) — needed for the above; no circular dependency (`core-ui`
+    doesn't depend on `core-navigation`).
+  - **Deliberately NOT done this slice** (Section 3E's own explicit scope
+    line, not an oversight): the remaining five glass primitives
+    (`GlassAppBar`, `GlassBottomSheet`, `GlassButton`, `GlassDialog`,
+    `GlassTooltip`) still render Glass-only regardless of the selected
+    style. Whoever picks up `D1.S9c`/`S9d`/... (or folds it into D10's
+    polish pass) should say which in their own handoff, per Section 3E's
+    instruction — not decided here.
+  - Not independently buildable in this sandbox (no Gradle wrapper yet),
+    reviewed by hand only for import/signature correctness — same caveat
+    as every prior slice. Checked all existing call sites of the changed
+    signatures (`GlassSurface`, `TradeNavHost`, `TradeThemeInstance`) by
+    hand; none besides the ones updated in this patch needed changes.
+
 ---
 
-*End of HANDOVER.md. Next session: Category 1, Phase D1, Slice 5 —
-Color tokens (light).*
+*End of HANDOVER.md. Next session: Category 1, Phase D1, Slice 10 —
+`ThemeEventBus` + `ThemeReactor`.*

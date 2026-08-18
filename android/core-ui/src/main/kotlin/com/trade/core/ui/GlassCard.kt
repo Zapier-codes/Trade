@@ -23,6 +23,11 @@ import com.trade.core.theme.LocalTradeTheme
  * rather than a hardcoded value, and lays content out in a `Column`
  * since that's every current card use case (stacked rows of content).
  *
+ * D1/Slice 9b: since [GlassSurface] now reskins per
+ * [com.trade.core.theme.WidgetStyle], `GlassCard` picks up all six
+ * styles automatically with no changes of its own — it never touches
+ * fill/border/shadow directly.
+ *
  * @param contentPadding Defaults to `spacing.md` — override for cards
  *   that need denser or looser padding (e.g. a compact list-row card).
  */

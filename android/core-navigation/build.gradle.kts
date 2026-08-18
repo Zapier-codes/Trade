@@ -36,4 +36,13 @@ dependencies {
     // these calls screen-by-screen as each route's real content lands.
     implementation("androidx.compose.material3:material3")
     implementation("androidx.navigation:navigation-compose:2.8.0")
+    // D1/Slice 9b: TradeNavHost now wires one real screen
+    // (AppearanceSettingsScreen) instead of EmptyRouteScreen for the new
+    // appearanceSettings route, per the D2+ convention already documented
+    // in TradeRoute.kt ("point TradeNavHost at it... delete the
+    // placeholder entry"). Needs core-ui (the screen itself) and
+    // core-theme (WidgetStyle, passed through from the app-shell host) —
+    // neither was a core-navigation dependency before this slice.
+    implementation(project(":core-theme"))
+    implementation(project(":core-ui"))
 }

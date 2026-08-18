@@ -8,10 +8,15 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.trade.app.presentation.AppShellUiState
 import com.trade.app.presentation.AppShellViewModel
 import com.trade.core.navigation.TradeNavHost
+import com.trade.core.theme.TradeTheme
+import com.trade.core.theme.WidgetStyle
 
 /**
  * Single-activity host. As of Slice 3, hosts the full [TradeNavHost] (every
@@ -38,14 +43,37 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun TradeAppShellHost(state: AppShellUiState) {
-    // core-theme's TradeTheme wrapper + ThemeEventBus land in Slices 4-14.
-    // This is a deliberately unstyled host so it's obvious it predates the
-    // theming engine.
-    Surface(modifier = Modifier) {
-        val subtitle = when (state) {
-            AppShellUiState.Loading -> "TRADE — loading build info..."
-            is AppShellUiState.Loaded -> "TRADE ${state.versionName} (demo mode: ${state.isDemoMode})"
+    // D1/Slice 9b: TradeTheme (built Slice 7, never actually mounted until
+    // now) is wired here for the first time. It was safe to leave unmounted
+    // through Slices 7-9 because GlassSurface/GlassCard's LocalTradeTheme
+    // read falls back to its own dark-mode default when nothing provides
+    // it (see LocalTradeTheme.kt) — but this slice's whole point is a
+    // picker that visibly reskins the app, which needs a real Provider in
+    // the tree with mutable state above TradeNavHost, not the static
+    // fallback. Flagged here rather than silently left implicit, per
+    // Section 1's non-negotiable rule: this was a blocking dependency for
+    // D1.S9b specifically, the same way Slice 7 flagged mounting
+    // LocalTradeTheme/TradeTheme itself as a blocking dependency it built
+    // ahead of its "official" slice.
+    //
+    // `style` is hoisted here, in-memory only (Section 3E: no persistence
+    // in this slice) — process death resets to WidgetStyle.Glass. R-phase
+    // replaces this `remember { mutableStateOf(...) }` with a real
+    // DataStore-backed value, same D-phase/R-phase split as everything
+    // else in this file.
+    var style by remember { mutableStateOf(WidgetStyle.Glass) }
+
+    TradeTheme(style = style) {
+        Surface(modifier = Modifier) {
+            val subtitle = when (state) {
+                AppShellUiState.Loading -> "TRADE — loading build info..."
+                is AppShellUiState.Loaded -> "TRADE ${state.versionName} (demo mode: ${state.isDemoMode})"
+            }
+            TradeNavHost(
+                buildInfoSubtitle = subtitle,
+                widgetStyle = style,
+                onWidgetStyleSelected = { style = it },
+            )
         }
-        TradeNavHost(buildInfoSubtitle = subtitle)
     }
 }

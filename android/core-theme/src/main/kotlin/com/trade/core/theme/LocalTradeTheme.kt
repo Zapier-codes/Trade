@@ -20,17 +20,25 @@ import androidx.compose.runtime.staticCompositionLocalOf
  * `LocalTradeTheme.current.colors.X` / `.typography.X` / `.spacing.X`
  * per Blueprint 3B.1, and never branch on light/dark themselves — only
  * `TradeTheme { }` itself picks `TradeThemeDark` vs `TradeThemeLight`.
+ *
+ * D1/Slice 9b adds [style]: which of the six [WidgetStyle] variants is
+ * active (Blueprint 3B.1 "Widget Style variants", `HANDOVER.md` Section
+ * 3E). Same rule applies — a primitive reads `LocalTradeTheme.current.style`
+ * and switches its own internal rendering; screens themselves never branch
+ * on it.
  */
 data class TradeThemeInstance(
     val colors: TradeColorTokens,
     val typography: TradeTypographyTokens,
     val spacing: TradeSpacingTokens,
+    val style: WidgetStyle = WidgetStyle.Glass,
 )
 
 private val defaultTradeTheme = TradeThemeInstance(
     colors = TradeThemeDark,
     typography = TradeTypography,
     spacing = TradeSpacing,
+    style = WidgetStyle.Glass,
 )
 
 /**
@@ -47,17 +55,27 @@ val LocalTradeTheme = staticCompositionLocalOf { defaultTradeTheme }
  * same either way (see their own files for why). `darkTheme` defaults
  * to the system setting; Slice 15's Demo/Live toggle is a separate,
  * unrelated concern and does not affect this parameter.
+ *
+ * D1/Slice 9b adds [style], defaulting to [WidgetStyle.Glass]. The caller
+ * (`MainActivity`'s app-shell host, as of this slice) is expected to hoist
+ * the selected style as mutable state and pass it through here so the
+ * Settings > Appearance screen's picker takes effect app-wide — this
+ * composable itself holds no state of its own, same as it holds none for
+ * `darkTheme`. Per Section 3E, this is **in-memory only** for D1.S9b; real
+ * persistence (DataStore) is R-phase scope.
  */
 @Composable
 fun TradeTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    style: WidgetStyle = WidgetStyle.Glass,
     content: @Composable () -> Unit,
 ) {
-    val instance = remember(darkTheme) {
+    val instance = remember(darkTheme, style) {
         TradeThemeInstance(
             colors = if (darkTheme) TradeThemeDark else TradeThemeLight,
             typography = TradeTypography,
             spacing = TradeSpacing,
+            style = style,
         )
     }
     CompositionLocalProvider(LocalTradeTheme provides instance, content = content)

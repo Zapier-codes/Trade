@@ -37,6 +37,15 @@ object TradeRoutes {
 
     const val ROUTE_DIRECTORY = "directory"
 
+    // ---- Topic 1: Foundation & Design System ----
+    // D1/Slice 9b: first Topic 1 route. Everything else in Topic 1 so far
+    // (Demo/Live toggle shell, Pawns consent modal) is app-shell chrome,
+    // not its own destination — Appearance is the first Topic 1 concern
+    // that's a genuinely separate, navigable screen (Section 3E: "no
+    // existing Topic has a general 'Settings' home... Appearance settings
+    // stays in Topic 1 since it's Layer 1B's own settings surface").
+    val appearanceSettings = TradeRoute("settings/appearance", "Settings — Appearance (Widget Style)", "Foundation & Design System", "D1.S9b")
+
     // ---- Topic 2: Onboarding & Authentication ----
     val welcome = TradeRoute("onboarding/welcome", "Welcome", "Onboarding & Auth", "D2.S01")
     val tutorial = TradeRoute("onboarding/tutorial", "Tutorial (3 slides)", "Onboarding & Auth", "D2.S02-05")
@@ -118,6 +127,7 @@ object TradeRoutes {
 
     /** Every route above, in declaration order — the single source of truth for [TradeNavHost]. */
     val all: List<TradeRoute> = listOf(
+        appearanceSettings,
         welcome, tutorial, termsOfService, onboardingHandoff,
         biometricPrompt, pinFallback, deviceBinding, passkeySetup, returningUserAuth,
         seedPhraseDisplay, socialRecoverySetup, sessionDeviceManagement,
