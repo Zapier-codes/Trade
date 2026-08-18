@@ -109,6 +109,27 @@ Two full token sets exist: `TradeThemeDark` and `TradeThemeLight`. Both
 consume the *same* token names — screens never branch on
 `isDarkMode`, they just read `LocalTradeTheme.current.X`.
 
+**Widget Style variants (NEW, added post-D1.S09 — see `HANDOVER.md`
+Section 3E):** the glass look above is the **default** style, not the
+only one. A Settings > Appearance screen lets a user switch to one of
+five alternates, each still with its own dark + light pair per the
+Dark/Light Parity Rule (3B.4) — six styles × two modes = twelve token
+sets in total once fully built out. `LocalTradeTheme.current.style`
+carries the active choice; screens still never branch on it directly
+— only each primitive's own internal styling logic does.
+
+| Style | Character |
+| :--- | :--- |
+| **Glass** (default) | The system described throughout this section — translucent, blurred, glow/shadow-reactive. |
+| **Neumorphic** | Soft extruded surfaces — same-color background and card, depth from dual soft shadows (light+dark), no border stroke. |
+| **Flat / Material** | Opaque fills, no blur or glow, elevation via flat drop-shadow steps only — closest to stock Material3. |
+| **Minimal (High-Contrast)** | Near-monochrome, thin 1px borders, no shadow/glow/blur at all — built for max legibility/accessibility. |
+| **Skeuomorphic** | Realistic material texture cues (subtle gradients, bevels) evoking physical surfaces — the most decorative option. |
+| **Retro/Neon** | Dark base with saturated neon-outline strokes and glow, CRT/synthwave-inspired — the most stylized option. |
+
+Full architecture, slice mapping, and phased rollout plan: `HANDOVER.md`
+Section 3E.
+
 #### 3B.2 — Glass Component System
 
 Reusable primitives, built once, used everywhere:

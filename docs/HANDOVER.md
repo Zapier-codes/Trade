@@ -200,7 +200,7 @@ number you applied?" before generating yours.
 
 | Phase | Title | Status | Slices Done | Last Patch # | Last Session Date |
 |---|---|---|---|---|---|
-| D1 | Project Foundation & Design System | 🟡 In progress | 9/20 (1a+1b+2+3+4+5+6+7+8+9 done) | 0013 | 2026-08-18 |
+| D1 | Project Foundation & Design System | 🟡 In progress | 9/20 (1a+1b+2+3+4+5+6+7+8+9 done) | 0014 | 2026-08-18 |
 | D2 | Onboarding & Authentication UI | 🔲 Not started | 0/20 | — | — |
 | D3 | Dashboard & Portfolio | 🔲 Not started | 0/20 | — | — |
 | D4 | Trading Interface | 🔲 Not started | 0/20 | — | — |
@@ -228,10 +228,11 @@ number you applied?" before generating yours.
 
 Legend: 🔲 not started · 🟡 in progress · ✅ complete · 🔒 locked (Category 2, waiting on Category 1)
 
-**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 10 — ThemeEventBus core**
-(`SharedFlow<ThemeEvent>` + event sealed class, plus `SoundTokens`
-scaffolding per Section 3D — read Section 3D before starting, this
-slice's scope was expanded by that addendum).
+**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 9b — Widget Style
+scaffold + Settings > Appearance screen** (`WidgetStyle` enum, theme
+plumbing, picker screen, `GlassSurface`+`GlassCard` reskinned for all
+6 styles — read Section 3E before starting; this slice was inserted
+after Slice 9, so Slice 10 comes after this one, not before it).
 
 ---
 
@@ -371,6 +372,69 @@ must never override device silent/DND mode.
 
 ---
 
+## 3E. ADDENDUM — Widget Style System & Appearance Settings (added post-D1.S09)
+
+Full spec lives in `docs/TRADE_BLUEPRINT_v2.md` Section 3B.1's new
+"Widget Style variants" subsection — **read it before touching either
+slice below.** Human request: someone who doesn't want the default
+Glass look should be able to pick from alternates in a Settings screen.
+Per explicit human direction, **five** alternates were chosen (Glass
+default + 5 = 6 total styles): **Neumorphic, Flat/Material, Minimal
+(High-Contrast), Skeuomorphic, Retro/Neon** — see the Blueprint table
+for each style's character description.
+
+**This is a real architecture expansion, flagged loudly per Section
+1's non-negotiable rules rather than folded in silently:** every glass
+primitive built in Slices 7-9 (`GlassSurface`, `GlassCard`,
+`GlassAppBar`, `GlassBottomSheet`, `GlassButton`, `GlassDialog`,
+`GlassTooltip`) currently renders **only** the Glass style. Six styles
+× two modes (Dark/Light Parity Rule, 3B.4, applies to every style, not
+just Glass) means **twelve** token sets and up to seven primitives ×
+six styles of rendering logic once fully built — this will not fit in
+one slice. The plan below phases it rather than attempting it all at
+once:
+
+- **New slice: D1.S9b — Widget Style scaffold + Settings > Appearance
+  screen.** Inserted after Slice 9, same "9a/9b" pattern the
+  session-partitioning rules already sanction for an oversized slice
+  (see Section 1, "split it... e.g. `D4.S07a`, `D4.S07b`") — does
+  **not** renumber Slices 10-20.
+  - D-phase: add a `WidgetStyle` enum (`Glass, Neumorphic, FlatMaterial,
+    Minimal, Skeuomorphic, RetroNeon`) to `core-theme`; extend
+    `TradeThemeInstance`/`LocalTradeTheme`/`TradeTheme { }` (Slice 7) to
+    carry the active style alongside dark/light, defaulting to `Glass`;
+    build the Settings > Appearance screen itself with a style picker
+    (swatch preview per option + selection), **in-memory only** — no
+    real persistence yet, matching this project's usual D-phase/R-phase
+    split. As the reference implementation, fully reskin `GlassSurface`
+    and `GlassCard` (Slice 7's two primitives) for all six styles; the
+    remaining five primitives (`GlassAppBar`, `GlassBottomSheet`,
+    `GlassButton`, `GlassDialog`, `GlassTooltip`) keep rendering
+    Glass-only for now regardless of the selected style — **not a bug,
+    tracked below.**
+  - R-phase: real persistence (DataStore), remaining five primitives'
+    full six-style reskin.
+  - Where the screen itself lives: no existing Topic has a general
+    "Settings" home (Topic 9 Slice 17 is privacy-specific, Topic 8
+    Slice 3 is notification-specific) — Appearance settings stays in
+    Topic 1 (Foundation & Design System) since it's Layer 1B's own
+    settings surface, same reasoning Slice 15's Demo/Live toggle shell
+    already lives there.
+- **Remaining primitives' six-style reskin (`GlassAppBar` through
+  `GlassTooltip`)**: intentionally **not** assigned a slice number yet.
+  Pick this up as continued `D1.S9c`/`S9d`/... slices (same
+  a/b/c-suffix pattern) once S9b lands, or fold into Topic 10's polish
+  pass (D10, "Theming Polish, Micro-interactions & Final QA") if it's
+  still open when that phase starts — whichever session reaches this
+  point should flag its choice in Section 6 rather than silently
+  picking one.
+- **Every existing and future glass primitive slice must still ship
+  its Glass-mode implementation first** — Glass stays the default and
+  the only style guaranteed complete at any given phase boundary; the
+  other five are additive, non-blocking polish on top.
+
+---
+
 ## 4. PHASE DETAILS
 
 
@@ -412,6 +476,7 @@ one from D1, unchanged unless a genuine bug is found.
 | 7 | Glass primitives — Surface/Card ✅ (0011) | `GlassSurface`, `GlassCard` | Perf pass (blur cost on real devices) |
 | 8 | Glass primitives — AppBar/Sheet ✅ (0012) | `GlassAppBar`, `GlassBottomSheet` | Perf pass |
 | 9 | Glass primitives — Button/Dialog (+ Tooltip, see 3D) ✅ (0013) | `GlassButton`, `GlassDialog`, `GlassTooltip` | Perf pass |
+| 9b | Widget Style scaffold + Settings > Appearance screen (see 3E) | `WidgetStyle` enum, theme plumbing, picker screen, `GlassSurface`+`GlassCard` reskinned for all 6 styles (fake persistence) | Real persistence (DataStore); remaining 5 primitives' full reskin |
 | 10 | ThemeEventBus core (+ SoundTokens/SoundReactor scaffold, see 3D) | `SharedFlow<ThemeEvent>`, event sealed class, `SoundTokens`, `SoundReactor` subscribed | Confirm real screens emit correctly end-to-end; real bundled sound assets |
 | 11 | ThemeReactor — ambient glow | Animate `ambientGlow` color per event | Tune against real event frequency |
 | 12 | ThemeReactor — light source motion | Animate `lightSource.x/y` | Tune |
@@ -800,6 +865,7 @@ services, performance pass, crash-resilience pass, final retrospective
 - Blueprint (product spec): `docs/TRADE_BLUEPRINT_v2.md`
 - Theming engine spec: Blueprint Section 3B (Layer 1B)
 - Tooltip + dynamic sound engine spec: Blueprint Section 3B.2 (`GlassTooltip`) + new Layer 1C, mapped in this file's Section 3D
+- Widget Style system (Glass + 5 alternates) + Appearance settings: Blueprint Section 3B.1 "Widget Style variants" + this file's Section 3E
 - 10 phase-topics: Blueprint Section 9
 - Session workflow: Section 1 of this file
 - Status/next-slice: Section 2 of this file
