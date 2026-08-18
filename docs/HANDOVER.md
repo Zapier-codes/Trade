@@ -196,7 +196,7 @@ number you applied?" before generating yours.
 
 | Phase | Title | Status | Slices Done | Last Patch # | Last Session Date |
 |---|---|---|---|---|---|
-| D1 | Project Foundation & Design System | 🟡 In progress | 3/20 (1a+1b+2+3 done) | 0005 | 2026-08-18 |
+| D1 | Project Foundation & Design System | 🟡 In progress | 4/20 (1a+1b+2+3+4 done) | 0006 | 2026-08-18 |
 | D2 | Onboarding & Authentication UI | 🔲 Not started | 0/20 | — | — |
 | D3 | Dashboard & Portfolio | 🔲 Not started | 0/20 | — | — |
 | D4 | Trading Interface | 🔲 Not started | 0/20 | — | — |
@@ -224,8 +224,10 @@ number you applied?" before generating yours.
 
 Legend: 🔲 not started · 🟡 in progress · ✅ complete · 🔒 locked (Category 2, waiting on Category 1)
 
-**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 4 — Color tokens (dark)**
-(`TradeThemeDark` full token set, in `core-theme`).
+**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 5 — Color tokens (light)**
+(`TradeThemeLight` full token set, in `core-theme` — see Slice 4's note
+on the Dark/Light Parity Rule: this is an independent design pass, not
+a mechanical inversion of `TradeThemeDark`).
 
 ---
 
@@ -351,7 +353,7 @@ one from D1, unchanged unless a genuine bug is found.
 | 1b | Gradle scaffold + module structure + Pawns/Consent scaffold | Module skeleton (`app`, `core-theme`, `core-ui`, `core-navigation`), empty app that plausibly compiles, `PawnsManager`/`ConsentModal`/boot-receiver stubs per Section 3C addendum (SDK calls stubbed, no real `.aar`/API key) | Verify/finalize build config, CI hooks; wire real Pawns SDK + API key + boot-receiver consent check |
 | 2 | Clean Architecture skeleton | `domain`/`data`/`presentation` folder contracts, placeholder use-cases | Real DI wiring (Hilt/Koin) across layers |
 | 3 ✅ | Navigation graph | All planned routes as empty Composables — **done, patch #0005** | Deep-link handling, real auth-gated routes |
-| 4 | Color tokens (dark) | `TradeThemeDark` full token set | Contrast/accessibility audit against real content |
+| 4 ✅ | Color tokens (dark) | `TradeThemeDark` full token set — **done, patch #0006** | Contrast/accessibility audit against real content |
 | 5 | Color tokens (light) | `TradeThemeLight` full token set | Contrast/accessibility audit against real content |
 | 6 | Typography + spacing tokens | Type scale, spacing scale | — (rarely changes; verify only) |
 | 7 | Glass primitives — Surface/Card | `GlassSurface`, `GlassCard` | Perf pass (blur cost on real devices) |
@@ -878,8 +880,37 @@ entries, just add yours with your phase/slice and date.)*
   - Not independently buildable in this sandbox (no Gradle wrapper
     yet, per the D1.S01b gap note above) — reviewed by hand for
     import/package correctness only, same caveat as prior slices.
+- **[D1.S04 — 2026-08-18]** `TradeThemeDark` full color token set added
+  in `core-theme/src/main/kotlin/com/trade/core/theme/`:
+  - `TradeColorTokens.kt` — the Color token group's *shape* (data
+    class), shared by `TradeThemeDark` (this slice) and `TradeThemeLight`
+    (next slice). Broader than the blueprint's illustrative example list
+    (`surface`/`surfaceGlass`/`accentPrimary`/`accentSignal`/
+    `ambientGlow` — those five kept, marked in comments) — added the
+    background/text/divider basics no screen ships without, plus
+    `positive`/`negative`/`depositGold`/`warning`/`error` semantic
+    tokens implied by the fee/result display rules in Blueprint 10.1
+    and the `ThemeEvent` table in 3B.3.
+  - `TradeThemeDark.kt` — the actual dark-mode values: near-black base,
+    cool-leaning neutral ramp, translucent glass fill + cool-white
+    border stroke per Blueprint 3B.2's dark-glass description, gold
+    reserved specifically for `depositGold` (matching `DepositConfirmed`'s
+    "gold ambient sweep," Blueprint 3B.3) rather than used generally.
+  - Removed `core-theme`'s Slice-1b `Placeholder.kt` stub.
+  - **Deliberately NOT in this slice** (flagging per Section 1 Rule 3
+    rather than guessing ahead): no `LocalTradeTheme` `CompositionLocal`
+    and no `TradeTheme { }` wrapper Composable yet. Blueprint 3B.1 says
+    screens should read `LocalTradeTheme.current.X` and never branch on
+    light/dark, but wiring that requires `TradeThemeLight` to exist too
+    (Slice 5) — building the switch mechanism around only one of the two
+    token sets risked guessing its shape wrong. Whoever does Slice 5
+    should either add the CompositionLocal/wrapper as part of that slice
+    or explicitly defer it to Slice 6 (Typography + spacing) — your call,
+    just don't let it silently slip past both.
+  - Not independently buildable in this sandbox (no Gradle wrapper),
+    reviewed by hand only, same caveat as prior slices.
 
 ---
 
-*End of HANDOVER.md. Next session: Category 1, Phase D1, Slice 4 —
-Color tokens (dark).*
+*End of HANDOVER.md. Next session: Category 1, Phase D1, Slice 5 —
+Color tokens (light).*
