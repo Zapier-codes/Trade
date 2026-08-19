@@ -439,7 +439,73 @@ once:
 
 ---
 
-## 4. PHASE DETAILS
+## 3F. ADDENDUM — Binance-Routed Execution & Maker/Taker Fees (added post-D1.S10)
+
+This addendum was added after Topics 1–10 below were first written,
+and after Section 3C's Monetization addendum was already in place.
+Full spec lives in `docs/TRADE_BLUEPRINT_v2.md` Section 10.1a (new)
+and the Layer 4/Section 8 updates alongside it — **read Section 10.1a
+before touching any slice referenced here**, same pattern Section 3C
+already set for the rest of the fee engine. This section only maps
+that spec onto specific slices/topics so no session misses it.
+
+**Two decisions were confirmed by the human this session, recorded
+here so a future session doesn't have to re-ask:**
+1. **Maker/taker fees are additive, not a replacement.** TRADE's own
+   order book keeps the flat 1.5%-only commission model (Section 3C,
+   unchanged). Maker/taker only applies to orders specifically routed
+   to Binance liquidity — a second, separate charge on top of the
+   1.5% for that subset of orders only.
+2. **Binance Connector SDK is a firm decision**, not a candidate to
+   evaluate — added to `docs/TRADE_BLUEPRINT_v2.md` Section 8's
+   reference table and Layer 4's backend service list.
+
+**Still genuinely open (Blueprint 10.1a's own flagged question, not
+decided this session)**: whether Binance's maker/taker fee on a routed
+order is absorbed by TRADE or passed through/marked up to the user.
+Do not build either the fee-disclosure UI or the backend `FeeEngine`
+math for this path until that's answered — it changes both.
+
+**Non-negotiable for every session touching these slices, D or R**:
+same rule Section 3C already sets — trade outcomes stay real/market-
+derived, and any UI showing a Binance-routed order's fees must show
+both charges as distinct line items once the absorb-vs-pass-through
+question above is answered (never silently merge them into one
+number, and never guess an answer to that question in order to ship
+a UI faster).
+
+- **New backend concern for R1/R4** (same "new backend concern"
+  pattern Section 3C already used for `FeeEngine`): a Binance execution
+  adapter (order routing, `binance-connector-java`) needs a home in
+  `services/backend`, alongside the existing `FeeEngine` scaffold plan.
+  R1 should scaffold its interface; R4 wires real order routing into
+  it. This is real backend integration work with no D-phase UI-only
+  equivalent — unlike most of this project's slices, there's nothing
+  to fake here that would be worth building before the routing
+  decision (which orders go to Binance vs. TRADE's own book vs. DEX
+  aggregation — itself still unspecified, see Blueprint 10.1a's last
+  bullet) is made.
+- **Topic 4 (Trading) — order confirmation/trade-result slices**
+  (same slice range Section 3C already flagged, Slices 7–13): once a
+  Binance-routing path exists, those screens need a second fee line
+  for Binance-routed orders specifically — do not build this before
+  the absorb-vs-pass-through question above is answered; flag it as
+  still-blocked in this section if D4 is reached first.
+- **`services/trading-agents`**: `binance-connector-python` is listed
+  in Blueprint Section 8 only as a *contingency* — "if the AI layer
+  ever submits orders directly." As of this addendum, TradingAgents
+  (Topic 6) is still spec'd as analysis/signal generation, not direct
+  order submission (Blueprint Layer 2) — don't wire this in until a
+  future session confirms the AI layer's role has actually expanded
+  to include order submission. Flagged here so it isn't silently
+  assumed later just because the reference exists in Section 8.
+- **`services/backend/README.md`** updated in this same patch to
+  point at this addendum, same pattern the existing `FeeEngine` note
+  there already follows.
+
+---
+
+
 
 
 Each phase-topic below has: **Goal**, **Scope**, **Phase acceptance

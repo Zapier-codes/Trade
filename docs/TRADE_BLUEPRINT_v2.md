@@ -292,10 +292,12 @@ LLM Provider → Analysis → Response → Android UI` (and, per Layer 1B,
 
 API Gateway (Ktor/Spring Boot) · Real-time data (WebSocket/SSE) ·
 PostgreSQL + Supabase · Redis cache · RabbitMQ/Kafka · LMAX
-Disruptor matching engine · DEX liquidity aggregator · AI model serving
-(TensorFlow Serving/ONNX) · Novu notifications · ELK + Prometheus ·
-Korapay + Juciway payments · IPGeolocation.io · dual demo/live balance
-system.
+Disruptor matching engine · DEX liquidity aggregator · **Binance
+Connector SDK (CEX liquidity/execution, firm decision post-D1.S10 —
+see Section 10.1a for the fee implications and `HANDOVER.md` Section
+3F for the slice mapping)** · AI model serving (TensorFlow Serving/
+ONNX) · Novu notifications · ELK + Prometheus · Korapay + Juciway
+payments · IPGeolocation.io · dual demo/live balance system.
 
 ---
 
@@ -384,6 +386,7 @@ social recovery · AI anomaly detection · ZK-SNARK privacy layer.
 | Security reference | OneKeyHQ/app-monorepo |
 | No-KYC P2P | vexl/vexl-android |
 | Order matching | mzheravin/exchange-core |
+| CEX execution (firm decision, post-D1.S10) | binance/binance-connector-java (Kotlin/JVM backend) + binance/binance-connector-python (`services/trading-agents`, if the AI layer ever submits orders directly) |
 | CI/CD reference | Lamont-Labs/QuantraVision |
 
 ---
@@ -446,6 +449,53 @@ commission, not a manipulated result.
   this spec used a worked example implying a 15% fee ($10 stake → $1.50
   fee). This document uses **1.5%**, per the rate stated everywhere
   else. Confirm before Topic 4/R4 implements real fee deduction.
+
+### 10.1a Maker/Taker Fees (Binance-Routed Orders Only)
+
+Added post-D1.S10, alongside the Binance Connector SDK decision (Section
+8 "Recommended Open Source References" and Layer 4). **Applies only
+to orders routed to Binance's live order book** (Section 2's "hybrid
+centralized + DEX aggregation" CEX liquidity source) — it is a
+**separate, additional** mechanism from Section 10.1's flat 1.5%
+commission, not a replacement for it. Orders matched on TRADE's own
+book (`mzheravin/exchange-core`/LMAX Disruptor engine) are unaffected
+and keep the flat 1.5%-only model exactly as Section 10.1 describes.
+
+- When an order routes to Binance liquidity, two charges apply to that
+  order, not one:
+  1. TRADE's own **1.5% platform commission** (Section 10.1, unchanged
+     — `net_stake = stake × 0.985`), and
+  2. **Binance's maker/taker fee**, charged on TRADE's own Binance
+     account for that order's execution — a **maker** fee if the order
+     rests on the book and is later filled by someone else, a **taker**
+     fee if it matches immediately against existing resting liquidity.
+- Binance's maker/taker rates are **tiered by 30-day trading volume and
+  BNB fee-discount status**, not a fixed percentage — the real schedule
+  must be read live from Binance's own fee-schedule endpoint or account
+  data at execution time, never hardcoded into TRADE's own code, since
+  it changes over time and per-account. (Standard **spot** starting tier
+  as of this writing is 0.1% maker / 0.1% taker before any BNB discount
+  — confirm current rates from Binance's official documentation before
+  R4 implementation, don't trust this document's number by the time
+  that slice is built.)
+- ⚠️ **Open question for the human to confirm before R4/R1 implements
+  this**: whether Binance's maker/taker fee on a routed order is
+  **absorbed by TRADE** (platform revenue stays exactly the 1.5%
+  commission, Binance's cut comes out of that same 1.5% rather than the
+  user), or **passed through/marked up to the user** as a visible
+  second line item alongside the existing stake/fee/net-stake display
+  (Section 10.1's UI requirement). This changes both the fee-disclosure
+  UI (does the user see one fee or two?) and the actual unit economics
+  per Binance-routed trade — needs a real decision, not an assumption,
+  before either the UI or the backend `FeeEngine` (Section 3C addendum,
+  `services/backend`) can be built for this path.
+- Only relevant once TRADE's order-routing logic actually decides
+  *which* orders go to Binance vs. TRADE's own book vs. DEX
+  aggregation (Section 2's "hybrid centralized + DEX aggregation" /
+  "aggregated top-10 DEX+CEX" liquidity model) — that routing decision
+  itself is not specified anywhere in this document yet and is real
+  design work for whoever builds Topic 4/R4, not something to infer
+  from this addendum.
 
 ### 10.2 Demo Account Balance
 
