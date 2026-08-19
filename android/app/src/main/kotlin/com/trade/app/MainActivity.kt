@@ -19,6 +19,7 @@ import com.trade.app.presentation.AppShellUiState
 import com.trade.app.presentation.AppShellViewModel
 import com.trade.core.navigation.TradeNavHost
 import com.trade.core.theme.SoundReactor
+import com.trade.core.theme.ThemeReactor
 import com.trade.core.theme.TradeTheme
 import com.trade.core.theme.WidgetStyle
 
@@ -90,16 +91,27 @@ private fun TradeAppShellHost(state: AppShellUiState) {
     }
 
     TradeTheme(style = style) {
-        Surface(modifier = Modifier) {
-            val subtitle = when (state) {
-                AppShellUiState.Loading -> "TRADE — loading build info..."
-                is AppShellUiState.Loaded -> "TRADE ${state.versionName} (demo mode: ${state.isDemoMode})"
+        // D1/Slice 11 — ThemeReactor (Blueprint 3B.3) mounted here, inside
+        // TradeTheme { } (it reads LocalTradeTheme.current to know the
+        // active theme's idle ambientGlow/semantic colors) and alongside
+        // SoundReactor above (both subscribe to the same ThemeEventBus,
+        // neither owns the other — see ThemeReactor.kt's class doc).
+        // Provides LocalTradeAmbient to everything below it; the route
+        // directory screen's new ThemeReactorTestSection is its only
+        // consumer so far (see RouteDirectoryScreen.kt) — a real product
+        // screen consuming it for its own visual design starts in Topic 2+.
+        ThemeReactor {
+            Surface(modifier = Modifier) {
+                val subtitle = when (state) {
+                    AppShellUiState.Loading -> "TRADE — loading build info..."
+                    is AppShellUiState.Loaded -> "TRADE ${state.versionName} (demo mode: ${state.isDemoMode})"
+                }
+                TradeNavHost(
+                    buildInfoSubtitle = subtitle,
+                    widgetStyle = style,
+                    onWidgetStyleSelected = { style = it },
+                )
             }
-            TradeNavHost(
-                buildInfoSubtitle = subtitle,
-                widgetStyle = style,
-                onWidgetStyleSelected = { style = it },
-            )
         }
     }
 }

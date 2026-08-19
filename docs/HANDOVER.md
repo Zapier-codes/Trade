@@ -200,7 +200,7 @@ number you applied?" before generating yours.
 
 | Phase | Title | Status | Slices Done | Last Patch # | Last Session Date |
 |---|---|---|---|---|---|
-| D1 | Project Foundation & Design System | 🟡 In progress | 10/20 + S9b (1a+1b+2+3+4+5+6+7+8+9+9b+10 done) | 0016 | 2026-08-19 |
+| D1 | Project Foundation & Design System | 🟡 In progress | 11/20 + S9b (1a+1b+2+3+4+5+6+7+8+9+9b+10+11 done) | 0017 | 2026-08-19 |
 | D2 | Onboarding & Authentication UI | 🔲 Not started | 0/20 | — | — |
 | D3 | Dashboard & Portfolio | 🔲 Not started | 0/20 | — | — |
 | D4 | Trading Interface | 🔲 Not started | 0/20 | — | — |
@@ -228,15 +228,17 @@ number you applied?" before generating yours.
 
 Legend: 🔲 not started · 🟡 in progress · ✅ complete · 🔒 locked (Category 2, waiting on Category 1)
 
-**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 11 — `ThemeReactor` —
-ambient glow** (Layer 1B's reactive ambient-glow animation, Blueprint
-3B.3 — read that section before starting; `ThemeEvent`/`ThemeEventBus`
-already exist from Slice 10, don't recreate them). Slice 10
-(`ThemeEventBus` core + `SoundTokens`/`SoundReactor` scaffold per
-Section 3D) is now ✅ — see Section 6 for what it did and didn't cover,
-in particular the `SoundReactor` playback-mechanism deviation (system
-default sound instead of bundled `SoundPool` assets, since none exist
-yet) that Slice 11 doesn't need to fix but should be aware of.
+**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 12 — `ThemeReactor` —
+light source motion** (animate `TradeAmbientState.lightSourceX/Y`,
+Blueprint 3B.3 — `ThemeEventBus`/`ThemeReactor`/`TradeAmbientState`
+already exist from Slices 10-11, extend `ThemeReactor.kt`, don't
+recreate them). Slice 11 (`ThemeReactor` — ambient glow) is now ✅ —
+see Section 6 for what it did, the two staleness bugs it fixed in its
+own draft before committing, and the new `ThemeReactorTestSection`
+QA aid added to `RouteDirectoryScreen` (flagged as beyond-slice-scope,
+same pattern prior sessions used) that Slice 12 should extend rather
+than duplicate when it needs its own on-device way to verify light-
+source motion.
 
 ---
 
@@ -1309,8 +1311,89 @@ entries, just add yours with your phase/slice and date.)*
   - Reviewed by hand only for import/signature correctness — same caveat
     as every prior slice. Checked all call sites of the new APIs by hand;
     `MainActivity` is currently the only consumer.
+- **[D1.S11 — 2026-08-19]** `ThemeReactor` (Blueprint 3B.3, ambient glow
+  only — light-source motion and the contextual-caption slot are Slices
+  12/13, not this one) added in `core-theme/src/main/kotlin/com/trade/core/theme/ThemeReactor.kt`:
+  - `TradeAmbientState` (ambientGlow + static placeholder `lightSourceX`/
+    `lightSourceY`/`contextualCaption` fields for Slices 12-13 to fill in
+    later) + `LocalTradeAmbient` `CompositionLocal`, same "fallback
+    default instead of crashing" pattern `LocalTradeTheme` already uses.
+  - `ThemeReactor(content)`: collects `ThemeEventBus.events` via
+    `collectLatest` (a new event preempts whatever pulse is currently
+    in-flight — `Animatable.animateTo` cancelling its own prior call is
+    documented, standard behavior, not a workaround), animates `glow`
+    (an `Animatable<Color, ...>`) from the current value to the event's
+    target color (`FastOutSlowInEasing`, 220ms default attack) then back
+    to the *current* idle color (`LinearOutSlowInEasing`, 900ms default
+    release). A separate `LaunchedEffect(idleGlow)` re-settles the glow
+    on a dark/light (or `WidgetStyle`) change with no event in flight.
+  - **Two staleness bugs found and fixed in this same patch, before
+    committing** (flagging per Section 1's spirit of surfacing real
+    issues rather than only listing what shipped cleanly):
+    1. Originally kept `Animatable`'s `remember` keyed on `theme` — that
+       would've hard-*reset* (no animation) the glow every mode/style
+       change, silently defeating the "smooth re-settle" effect right
+       next to it. Fixed: `remember` is unkeyed (created once for
+       `ThemeReactor`'s whole lifetime); only the *initial* value comes
+       from the theme active at first composition.
+    2. `theme.colors` was originally read directly inside the long-lived
+       `LaunchedEffect(Unit)` collector closure — since that effect never
+       restarts, it would've kept using whichever theme was active when
+       collection *started*, so a mode/style change mid-session would
+       make new events pulse toward the *old* theme's semantic colors.
+       Fixed with the same `rememberUpdatedState` pattern already used
+       for `idleGlow` (`currentColors`).
+  - `eventGlowSpec()` maps each `ThemeEvent` to a target color + attack/
+    release duration. Judgment calls, flagged rather than silently
+    assumed: `AISignalFired.confidence` scales *how far* the color lerps
+    from idle toward `accentSignal` (there's no separate opacity concept
+    once `Color` is an `Animatable`'s target); `WithdrawalBroadcast` uses
+    `accentPrimary` since `TradeColorTokens` has no dedicated token for
+    it (unlike positive/negative/depositGold/error) — revisit if a later
+    slice adds one; `AgentStatusChange` uses a small 0.25 lerp toward
+    `accentSignal` with shorter (400ms/400ms) durations, deliberately
+    matching `SoundTokens`' description of that event's sound as "very
+    quiet... easy to miss on purpose" so the visual and audio characters
+    agree; both `AgentStatusChange(active = true)` and `(active = false)`
+    currently produce the *same* pulse — no distinct "went idle" visual
+    exists yet, flagged here rather than guessed at.
+  - No `MotionTokens`/`durationFast/Med/Slow` group exists yet (same
+    long-open gap `GlassSurface`'s Slice 7 doc already flagged for
+    `radius.*`/`blurRadius`) — attack/release durations are local
+    constants in `ThemeReactor.kt`, not tokens. Move them into a real
+    token group whenever one gets built.
+  - `core-theme/build.gradle.kts`: added `androidx.compose.animation:animation-core`
+    explicitly (for `Animatable`/`tween`) — likely already reachable
+    transitively through `foundation`, declared anyway per this
+    project's own convention of naming every dependency a new file
+    actually needs.
+  - **`core-navigation`'s `RouteDirectoryScreen.kt` also updated this
+    patch**, beyond Slice 11's literal name, flagged per Section 1's
+    rule the same way prior sessions have flagged similar additions:
+    added a `ThemeReactorTestSection` (seven buttons — `TradeExecuted`'s
+    Buy/Sell split plus the other five event types — and a 48dp swatch
+    reading `LocalTradeAmbient.current.ambientGlow`) to the existing
+    route-directory screen. Reasoning: this sandbox still has no Gradle
+    wrapper (every prior slice's entry notes "reviewed by hand only"),
+    so without a reachable on-device trigger the human has no way to
+    actually *see* this slice work after pulling the patch, only to
+    trust a code review. Deliberately plain Material3 (`Button`/`Box`),
+    matching this screen's existing "not yet reskinned" character — not
+    a `core-ui` glass reskin of the screen itself, which stays out of
+    scope here. `MainActivity.kt` updated to mount `ThemeReactor` inside
+    `TradeTheme { }`, wrapping the existing `Surface`/`TradeNavHost`
+    content, alongside the `SoundReactor` mounting from Slice 10.
+  - This also closes most of D1's overall Phase-acceptance line
+    ("`ThemeEventBus` exists and at least one placeholder screen
+    demonstrably reacts to a test event with both a dark- and
+    light-mode expression") — demonstrably, once the human can build
+    and toggle dark/light mode themselves; still not independently
+    verified end-to-end in this sandbox (no Gradle wrapper).
+  - Reviewed by hand only for import/signature correctness and logical
+    consistency (including the two staleness bugs above, caught and
+    fixed before this write-up) — same caveat as every prior slice.
 
 ---
 
-*End of HANDOVER.md. Next session: Category 1, Phase D1, Slice 11 —
-`ThemeReactor` — ambient glow.*
+*End of HANDOVER.md. Next session: Category 1, Phase D1, Slice 12 —
+`ThemeReactor` — light source motion.*

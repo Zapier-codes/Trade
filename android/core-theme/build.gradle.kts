@@ -37,4 +37,11 @@ dependencies {
     // usage here) — `app` already depends on `-android` for its own
     // ViewModel/coroutine scope needs, unrelated to this.
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+    // D1/Slice 11 — ThemeReactor animates TradeAmbientState.ambientGlow via
+    // Animatable<Color, ...>/animateTo/tween. Likely already reachable
+    // transitively through `foundation`, but declared explicitly per this
+    // project's own convention (see the coroutines-core comment above) of
+    // flagging every dependency a new file actually needs rather than
+    // relying on an undocumented transitive path.
+    implementation("androidx.compose.animation:animation-core")
 }
