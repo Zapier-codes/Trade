@@ -200,7 +200,7 @@ number you applied?" before generating yours.
 
 | Phase | Title | Status | Slices Done | Last Patch # | Last Session Date |
 |---|---|---|---|---|---|
-| D1 | Project Foundation & Design System | 🟡 In progress | 9/20 + S9b (1a+1b+2+3+4+5+6+7+8+9+9b done) | 0015 | 2026-08-18 |
+| D1 | Project Foundation & Design System | 🟡 In progress | 10/20 + S9b (1a+1b+2+3+4+5+6+7+8+9+9b+10 done) | 0016 | 2026-08-19 |
 | D2 | Onboarding & Authentication UI | 🔲 Not started | 0/20 | — | — |
 | D3 | Dashboard & Portfolio | 🔲 Not started | 0/20 | — | — |
 | D4 | Trading Interface | 🔲 Not started | 0/20 | — | — |
@@ -228,13 +228,15 @@ number you applied?" before generating yours.
 
 Legend: 🔲 not started · 🟡 in progress · ✅ complete · 🔒 locked (Category 2, waiting on Category 1)
 
-**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 10 — `ThemeEventBus` +
-`ThemeReactor`** (Layer 1B's reactive ambient-glow/light-source
-animation, Blueprint 3B.3 — read that section and Section 3D before
-starting; note `SoundTokens`/`SoundReactor` scaffolding per Section 3D
-is also folded into Slices 10-11, don't build a second event bus).
-Slice 9b (Widget Style scaffold + Settings > Appearance screen) is now
-✅ — see Section 6 for what it did and didn't cover.
+**➡️ NEXT SESSION STARTS AT: Phase D1, Slice 11 — `ThemeReactor` —
+ambient glow** (Layer 1B's reactive ambient-glow animation, Blueprint
+3B.3 — read that section before starting; `ThemeEvent`/`ThemeEventBus`
+already exist from Slice 10, don't recreate them). Slice 10
+(`ThemeEventBus` core + `SoundTokens`/`SoundReactor` scaffold per
+Section 3D) is now ✅ — see Section 6 for what it did and didn't cover,
+in particular the `SoundReactor` playback-mechanism deviation (system
+default sound instead of bundled `SoundPool` assets, since none exist
+yet) that Slice 11 doesn't need to fix but should be aware of.
 
 ---
 
@@ -479,7 +481,7 @@ one from D1, unchanged unless a genuine bug is found.
 | 8 | Glass primitives — AppBar/Sheet ✅ (0012) | `GlassAppBar`, `GlassBottomSheet` | Perf pass |
 | 9 | Glass primitives — Button/Dialog (+ Tooltip, see 3D) ✅ (0013) | `GlassButton`, `GlassDialog`, `GlassTooltip` | Perf pass |
 | 9b | Widget Style scaffold + Settings > Appearance screen (see 3E) | `WidgetStyle` enum, theme plumbing, picker screen, `GlassSurface`+`GlassCard` reskinned for all 6 styles (fake persistence) | Real persistence (DataStore); remaining 5 primitives' full reskin |
-| 10 | ThemeEventBus core (+ SoundTokens/SoundReactor scaffold, see 3D) | `SharedFlow<ThemeEvent>`, event sealed class, `SoundTokens`, `SoundReactor` subscribed | Confirm real screens emit correctly end-to-end; real bundled sound assets |
+| 10 ✅ | ThemeEventBus core (+ SoundTokens/SoundReactor scaffold, see 3D) ✅ (0016) | `SharedFlow<ThemeEvent>`, event sealed class, `SoundTokens`, `SoundReactor` subscribed | Confirm real screens emit correctly end-to-end; real bundled sound assets |
 | 11 | ThemeReactor — ambient glow | Animate `ambientGlow` color per event | Tune against real event frequency |
 | 12 | ThemeReactor — light source motion | Animate `lightSource.x/y` | Tune |
 | 13 | ThemeReactor — contextual caption | `ContextualCaption` slot + fade timing | Real copywriting pass per event |
@@ -1181,7 +1183,68 @@ entries, just add yours with your phase/slice and date.)*
     signatures (`GlassSurface`, `TradeNavHost`, `TradeThemeInstance`) by
     hand; none besides the ones updated in this patch needed changes.
 
+- **[D1.S10 — 2026-08-19]** `ThemeEventBus` core + `SoundTokens`/
+  `SoundReactor` scaffold (Blueprint 3B.3 + Layer 1C, `HANDOVER.md`
+  Section 3D), patch #0016:
+  - `core-theme`: new `ThemeEvent.kt` (sealed class — `TradeExecuted(side)`,
+    `DepositConfirmed`, `AISignalFired(confidence)`, `WithdrawalBroadcast`,
+    `ErrorOccurred`, `AgentStatusChange(active)` — the six from Blueprint
+    3B.3's table), new `ThemeEventBus.kt` (an `object` wrapping
+    `MutableSharedFlow<ThemeEvent>`, exposed read-only as `events` — one
+    bus, matches Blueprint 1C.2's "no second event bus" rule up front so
+    Slice 11's `ThemeReactor` and this slice's `SoundReactor` are already
+    both pointed at it). `core-theme` gained `kotlinx-coroutines-core` as
+    a new dependency (had none before).
+  - `core-theme`: new `SoundTokens.kt` — one token set (no dark/light
+    split, per Blueprint 1C.1), a `SoundCue(character, soundResId)` per
+    event via `cueFor(event)`. **Every `soundResId` is `null` in this
+    slice** — no bundled `res/raw` audio assets exist in this sandbox
+    session, so there was nothing to point them at yet.
+  - `core-theme`: new `SoundReactor.kt` — a plain class (not an `object`,
+    it owns a `Context`-scoped `SoundPool` that needs releasing),
+    `start()` collects `ThemeEventBus.events` forever, `playFor` checks
+    device silent/DND (`AudioManager` ringer mode **and**
+    `NotificationManager` interruption filter — the "never overridden"
+    rule from Blueprint 1C.2) then the in-app `soundEnabled` toggle
+    (`var`, defaults `true`, not wired to any UI yet — Topic 8's real
+    toggle is D8.S03, far outside this slice, wiring it now would be
+    guessing ahead of that slice's own scope).
+  - **Flagged deviation from Blueprint 1C.2's literal wording**: because
+    every `SoundTokens` entry's `soundResId` is null (see above),
+    `SoundReactor` currently falls through to playing the *device's
+    default notification sound* via `RingtoneManager` + a one-shot
+    `MediaPlayer`, for every event, rather than the named `SoundPool` +
+    bundled-asset path — Blueprint 1C.1's own D-phase allowance ("short
+    placeholder tones **or system defaults**"), just resolved through a
+    different native API than the one named for the *final* mechanism.
+    The `SoundPool` plumbing is still fully built and will be preferred
+    automatically the moment any `SoundTokens` entry gets a real
+    `soundResId` — no other file needs to change then. Net effect today:
+    every event *sounds* identical (only `character`'s text currently
+    differentiates them) even though each has a distinct visual
+    treatment coming in Slice 11. Whoever adds real (or placeholder)
+    `res/raw` files should treat that as the natural moment to close this
+    gap, not necessarily wait for R-phase.
+  - `app`: `MainActivity`'s `TradeAppShellHost` mounts `SoundReactor` "at
+    app root" per Blueprint 1C.2's wording — `remember(context) { SoundReactor(context) }`,
+    started from a `LaunchedEffect`, released from a separate
+    `DisposableEffect` (collection-stopping and pool-release are
+    different lifecycle events, kept as two effects rather than one).
+  - **Not built this slice** (Slice 11's scope, not this one's): nothing
+    yet actually *emits* into `ThemeEventBus` from a real screen —
+    there's no `TradeExecuted`/`DepositConfirmed`/etc. call site anywhere,
+    since the screens that would fire them don't exist until later
+    Topics. `ThemeReactor` itself (the visual `ambientGlow` animation)
+    also isn't built — Slice 11's job. So as of this patch, the bus and
+    `SoundReactor` are wired and would work the moment something emits,
+    but nothing in the app currently does; not independently verifiable
+    end-to-end in this sandbox for that reason, on top of the usual "no
+    Gradle wrapper" caveat.
+  - Reviewed by hand only for import/signature correctness — same caveat
+    as every prior slice. Checked all call sites of the new APIs by hand;
+    `MainActivity` is currently the only consumer.
+
 ---
 
-*End of HANDOVER.md. Next session: Category 1, Phase D1, Slice 10 —
-`ThemeEventBus` + `ThemeReactor`.*
+*End of HANDOVER.md. Next session: Category 1, Phase D1, Slice 11 —
+`ThemeReactor` — ambient glow.*

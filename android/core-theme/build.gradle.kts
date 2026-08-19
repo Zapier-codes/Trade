@@ -31,4 +31,10 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material3:material3")
+    // D1/Slice 10 — ThemeEventBus (SharedFlow<ThemeEvent>) needs
+    // kotlinx-coroutines-core for MutableSharedFlow/SharedFlow. Only the
+    // platform-agnostic `-core` artifact, not `-android` (no Dispatchers.Main
+    // usage here) — `app` already depends on `-android` for its own
+    // ViewModel/coroutine scope needs, unrelated to this.
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
 }

@@ -6,15 +6,19 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import com.trade.app.presentation.AppShellUiState
 import com.trade.app.presentation.AppShellViewModel
 import com.trade.core.navigation.TradeNavHost
+import com.trade.core.theme.SoundReactor
 import com.trade.core.theme.TradeTheme
 import com.trade.core.theme.WidgetStyle
 
@@ -62,6 +66,28 @@ private fun TradeAppShellHost(state: AppShellUiState) {
     // DataStore-backed value, same D-phase/R-phase split as everything
     // else in this file.
     var style by remember { mutableStateOf(WidgetStyle.Glass) }
+
+    // D1/Slice 10 — SoundReactor (Blueprint 1C.2) is mounted here, "at app
+    // root," per that section's own wording. `remember(context)` rather
+    // than a plain top-level singleton (unlike ThemeEventBus) because it
+    // holds a Context-scoped SoundPool that must be released — see
+    // SoundReactor.kt's class doc for why it isn't an `object`.
+    //
+    // LaunchedEffect(soundReactor) starts the (suspend-forever) collection
+    // loop; it's cancelled automatically if `soundReactor` identity ever
+    // changed (it won't, `remember` keys are stable here) or on
+    // composition leaving. DisposableEffect separately releases the
+    // SoundPool on final teardown — collection stopping and the pool
+    // being released are two different lifecycle events, so they're two
+    // different effects rather than one that tries to do both.
+    val context = LocalContext.current
+    val soundReactor = remember(context) { SoundReactor(context) }
+    LaunchedEffect(soundReactor) {
+        soundReactor.start()
+    }
+    DisposableEffect(soundReactor) {
+        onDispose { soundReactor.release() }
+    }
 
     TradeTheme(style = style) {
         Surface(modifier = Modifier) {
